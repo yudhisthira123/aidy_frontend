@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:frontend/location/location_provider.dart';
 import 'package:frontend/location/location_service.dart';
 
 void main() {
@@ -42,6 +41,15 @@ class MyApp extends StatelessWidget {
       home: HomeView(),
     );
   }
+}
+
+class HomeScreen extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // TODO: implement build
+    throw UnimplementedError();
+  }
+
 }
 
 class HomeView extends StatelessWidget {
