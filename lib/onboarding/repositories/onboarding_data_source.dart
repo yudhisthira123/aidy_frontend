@@ -3,8 +3,10 @@ import 'dart:io';
 import 'dart:math';
 
 import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/common/constants.dart';
 import 'package:frontend/common/result.dart';
+import 'package:frontend/dio_client.dart';
 import 'package:frontend/onboarding/models/user_model.dart';
 
 abstract class OnBoardingBase {
@@ -124,3 +126,7 @@ class OnBoardingDataSource {
   }
 
 }
+
+final onBoardingDataSourceProvider = Provider<OnBoardingDataSource>((ref) {
+  return OnBoardingDataSource(dio: DioClient().provideDio());
+});

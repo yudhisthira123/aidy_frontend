@@ -15,7 +15,7 @@ class DioClient {
 
   factory DioClient() => _apiService;
 
-  void provideDio() {
+  Dio provideDio() {
 
     _dio = Dio(
       BaseOptions(
@@ -27,6 +27,7 @@ class DioClient {
       )
     );
 
+    return _dio;
   }
 
 }
