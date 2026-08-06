@@ -1,14 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:frontend/location/location_service.dart';
+import 'package:frontend/location/location_provider.dart';
+import 'package:geolocator/geolocator.dart';
 
 void main() {
-  runApp(
-      // const MyApp()
-    const ProviderScope(
-      child: MyApp(),
-    ),
-  );
+  runApp(const ProviderScope(child: MyApp()));
 }
 
 class MyApp extends StatelessWidget {
@@ -43,28 +39,91 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class HomeScreen extends ConsumerWidget {
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // TODO: implement build
-    throw UnimplementedError();
-  }
+class HomeView extends ConsumerStatefulWidget {
+  const HomeView({super.key});
 
+  @override
+  ConsumerState<ConsumerStatefulWidget> createState() => _HomeViewState();
 }
 
-class HomeView extends StatelessWidget {
+class _HomeViewState extends ConsumerState<HomeView> {
+  bool isMonitoring = true;
+
+  @override
+  void initState() {
+    super.initState();
+    ref.read(locationAsyncNotifierProvider.notifier).startMonitoring();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    if (isMonitoring) {
+      ref.read(locationAsyncNotifierProvider.notifier).stopMonitoring();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
 
-    final locationService = LocationService();
+    return ref
+        .watch(locationAsyncNotifierProvider)
+        .when(
+          data: (listAidyLocations) {
+            return Scaffold(
+              appBar: AppBar(title: const Text('AIDY - Live Location')),
+              body: Center(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  spacing: 8,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () {
+                        if (isMonitoring) {
+                          ref
+                              .read(locationAsyncNotifierProvider.notifier)
+                              .stopMonitoring();
+                          isMonitoring = false;
+                        } else {
+                          ref
+                              .read(locationAsyncNotifierProvider.notifier)
+                              .startMonitoring();
+                          isMonitoring = true;
+                        }
+                      },
+                      child: Text('Start/Stop Location Monitor'),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Text(
+                        _distanceMessage(listAidyLocations),
+                        style: TextStyle(fontSize: 20, color: Colors.green),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+          error: (err, stack) {
+            return Center(child: Text('Could not fetch your location.'));
+          },
+          loading: () => Center(child: CircularProgressIndicator()),
+        );
+  }
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('AIDY - Live Location'),),
-      body: TextButton(onPressed: () {
-        // locationService.startLocationTracking();
-        locationService.ensureLocationPermission();
-        locationService.watchPosition();
-      }, child: Text('Track location')),
-    );
+  String _distanceMessage(List<AidyLocation> listAidyLocations) {
+    if (listAidyLocations.length > 1) {
+      int secondLastIndex = listAidyLocations.length - 2;
+      double distanceMoved = Geolocator.distanceBetween(listAidyLocations[secondLastIndex].latitude, listAidyLocations[secondLastIndex].longitude, listAidyLocations.last.latitude, listAidyLocations.last.longitude);
+      return 'Current Latitude: ${listAidyLocations.last.latitude},\n'
+          'Current Longitude: ${listAidyLocations.last.longitude} \n'
+          'Distance moved: ${distanceMoved.toStringAsFixed(2)} mts';
+    } else if (listAidyLocations.isNotEmpty) {
+      return 'Initial Latitude: ${listAidyLocations[0].latitude},\n'
+          'Initial Longitude: ${listAidyLocations[0].longitude}';
+    } else {
+      return 'No location info available';
+    }
   }
 }
