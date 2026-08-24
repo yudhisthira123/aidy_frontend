@@ -6,12 +6,7 @@ import 'package:flutter_background_service/flutter_background_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 
-class AidyLocation {
-  double latitude;
-  double longitude;
-
-  AidyLocation({required this.latitude, required this.longitude});
-}
+import '../models/location_model.dart';
 
 final locationAsyncNotifierProvider = AsyncNotifierProvider<LocationNotifier, List<AidyLocation>>(LocationNotifier.new);
 
