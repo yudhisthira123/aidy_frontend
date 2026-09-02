@@ -8,3 +8,5 @@ const String apiOnBoardingSkip = "api/onboarding/skip";
 
 const String apiCategories = "api/categories";
 const String apiSubCategories = "api/categories?include=subcategories";
+
+const String apiRequests = "api/requests";

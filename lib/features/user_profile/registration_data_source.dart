@@ -6,7 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/common/constants.dart';
 import 'package:frontend/common/result.dart';
 import 'package:frontend/dio_client.dart';
-import 'package:frontend/common//user_model.dart';
+import 'package:frontend/common/user_model.dart';
 
 final registrationDataSourceProvider = Provider<RegistrationDataSource>((ref) {
   return RegistrationDataSource(dio: DioClient().provideDio());

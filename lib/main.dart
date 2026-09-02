@@ -1,18 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:frontend/location/location_provider.dart';
+import 'package:frontend/features/quick_help/quick_help_view.dart';
 import 'package:geolocator/geolocator.dart';
+import 'features/location/models/location_model.dart';
+import 'features/location/providers/location_provider.dart';
+import 'features/user_profile/user_profile_view.dart';
+
+const brand = Color(0xFF1B1D36),
+    green = Color(0xFF6757D9),
+    canvas = Color(0xFFF8F7FC),
+    coral = Color(0xFFFF6B6B),
+    softMint = Color(0xFFEFECFF);
 
 void main() {
   runApp(const ProviderScope(child: MyApp()));
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerWidget {
   const MyApp({super.key});
 
   // This widget is the root of your application.
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
@@ -33,8 +43,151 @@ class MyApp extends StatelessWidget {
         // tested with just a hot reload.
         colorScheme: .fromSeed(seedColor: Colors.deepPurple),
       ),
-      // home: const MyHomePage(title: 'Flutter Demo Home Page'),
-      home: HomeView(),
+      // home: HomeView(),
+      home: MainNavigationView(),
+      // home: authState.when(
+      //     data: (AuthResponse? authResponse ) {
+      //       if(authResponse != null ) {
+      //         return HomeView();
+      //       } else {
+      //         return HomeView();
+      //       }
+      //       },
+      //     error: (err, stack) => HomeView(),
+      //     loading: () => Scaffold(
+      //       body: Center(child: CircularProgressIndicator(),),
+      //     )
+      // ),
+    );
+  }
+}
+
+class MainNavigationView extends ConsumerStatefulWidget {
+  const MainNavigationView({super.key});
+
+  @override
+  ConsumerState<ConsumerStatefulWidget> createState() {
+    return _MainNavigationViewState();
+  }
+}
+
+class _MainNavigationViewState extends ConsumerState<MainNavigationView> {
+
+  int _currentIndex = 0;
+
+  // The 4 screens representing each tab
+  final List<Widget> _screens = const [
+    StartView(),
+    RequestsView(),
+    WhatsNewView(),
+    ProfileView(),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: IndexedStack(
+        index: _currentIndex,
+        children: _screens,
+      ),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _currentIndex,
+          onDestinationSelected: (int index) {
+          setState(() {
+            _currentIndex = index;
+          });
+
+          },
+          destinations: [
+            NavigationDestination(icon: Icon(Icons.home), label: 'Start'),
+            NavigationDestination(icon: Icon(Icons.request_page), label: 'Requests'),
+            NavigationDestination(icon: Icon(Icons.question_mark), label: 'WhatsNew'),
+            NavigationDestination(icon: Icon(Icons.account_circle), label: 'Profile')
+          ]
+      ),
+    );
+  }
+
+}
+
+class StartView extends ConsumerStatefulWidget {
+  const StartView({super.key});
+
+  @override
+  ConsumerState<ConsumerStatefulWidget> createState() {
+    return _StartViewState();
+  }
+}
+class _StartViewState extends ConsumerState<StartView> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('AIDY'),),
+      body: Column(
+        children: [
+          Container(
+            padding: EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(10)
+              ),
+              child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void> (builder: (context) => QuickHelpView()
+                      )
+                    );
+                  }, 
+                  child: Text('Quick Help')
+              )
+          ),
+          Container(
+            child: ElevatedButton(onPressed: () {}, child: Text('Local support'))
+          ),
+          Container(
+            child: ElevatedButton(onPressed: () {}, child: Text('Lost & Found'))
+          ),
+        ],
+      )
+    );
+  }
+}
+
+class RequestsView extends ConsumerStatefulWidget {
+  const RequestsView({super.key});
+
+  @override
+  ConsumerState<ConsumerStatefulWidget> createState() {
+    return _RequestsViewState();
+  }
+}
+class _RequestsViewState extends ConsumerState<RequestsView> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('AIDY'),),
+      body: Center(
+        child: Text('My Requests')
+      ),
+    );
+  }
+}
+
+class WhatsNewView extends ConsumerStatefulWidget {
+  const WhatsNewView({super.key});
+
+  @override
+  ConsumerState<ConsumerStatefulWidget> createState() {
+    return _WhatsNewViewState();
+  }
+}
+class _WhatsNewViewState extends ConsumerState<WhatsNewView> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('AIDY'),),
+      body: Center(
+          child: Text('Whatsnew?')
+      ),
     );
   }
 }
