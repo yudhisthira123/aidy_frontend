@@ -30,16 +30,19 @@ class _UserRegistrationViewState extends ConsumerState<UserRegistrationView> {
       isButtonEnabled = false;
 
   Future<void> submit() async {
+
     setState(() {
       isButtonEnabled = false;
     });
 
     try {
 
-      print(email.text);
-      print(password.text);
-
-    }catch(e) {
+      if(isLoginMode) {
+        ref.read(registrationProvider.notifier).login(email.text.trim(), password.text);
+      }
+      else {
+        ref.read(registrationProvider.notifier).register(name.text.trim(), email.text.trim(), password.text);
+      }
 
     }finally {
       isButtonEnabled = false;

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:frontend/features/quick_help/quick_help_view.dart';
+import 'package:frontend/features/requests/quick_help_view.dart';
 import 'package:geolocator/geolocator.dart';
 import 'features/location/models/location_model.dart';
 import 'features/location/providers/location_provider.dart';
+import 'features/requests/requests_view.dart';
 import 'features/user_profile/user_profile_view.dart';
 
 const brand = Color(0xFF1B1D36),
@@ -148,26 +149,6 @@ class _StartViewState extends ConsumerState<StartView> {
           ),
         ],
       )
-    );
-  }
-}
-
-class RequestsView extends ConsumerStatefulWidget {
-  const RequestsView({super.key});
-
-  @override
-  ConsumerState<ConsumerStatefulWidget> createState() {
-    return _RequestsViewState();
-  }
-}
-class _RequestsViewState extends ConsumerState<RequestsView> {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('AIDY'),),
-      body: Center(
-        child: Text('My Requests')
-      ),
     );
   }
 }

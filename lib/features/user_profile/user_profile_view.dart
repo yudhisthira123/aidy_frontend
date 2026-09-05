@@ -33,10 +33,10 @@ class _ProfileViewState extends ConsumerState<ProfileView> {
 
     final authState = ref.watch(registrationProvider);
 
-    print("authState $authState");
+    print("authState =  $authState");
 
     return Scaffold(
-        appBar: AppBar(title: Text('AIDY-Profile'),),
+        appBar: AppBar(title: Text('AIDY-x'),),
         body:  authState.when(
             data: ( authResponse) {
               if(authResponse != null) {
@@ -47,13 +47,12 @@ class _ProfileViewState extends ConsumerState<ProfileView> {
               }
             },
             error: (err, stack){
-
+              return UserRegistrationView();
             },
             loading: () {
               return Center(child: CircularProgressIndicator(),);
             }
         )
-
       // body:
     );
   }

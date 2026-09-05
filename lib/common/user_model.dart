@@ -55,8 +55,8 @@ class User {
   final String name;
   final String email;
   final bool verified;
-  final OnBoarding onBoarding;
-  final List<String> places;
+  // final OnBoarding onBoarding;
+  // final List<String> places;
   final List<String> competencies;
   final List<String> equipment;
   final Availability availability;
@@ -66,8 +66,6 @@ class User {
     required this.name,
     required this.email,
     required this.verified,
-    required this.onBoarding,
-    required this.places,
     required this.competencies,
     required this.equipment,
     required this.availability,
@@ -79,8 +77,6 @@ class User {
       name: json['name'] as String,
       email: json['email'] as String,
       verified: json['verified'] as bool,
-      onBoarding: OnBoarding.fromJson(json['onboarding'] as Map<String, dynamic>),
-      places: List<String>.from(json['places'] ?? []),
       competencies: List<String>.from(json['competencies'] ?? []),
       equipment: List<String>.from(json['equipment'] ?? []),
       availability:
@@ -93,8 +89,6 @@ class User {
     'name': name,
     'email': email,
     'verified': verified,
-    'onBoarding': onBoarding,
-    'places': places,
     'competencies': competencies,
     'equipment': equipment,
     'availability': availability.toJson(),
@@ -163,7 +157,6 @@ class Availability {
   factory Availability.fromJson(Map<String, dynamic> json) {
     return Availability(
       state: json['state'] as String,
-      // until: DateTime.parse(json['until'] as String),
       until: DateTime(2027),
       helpTypes: List<String>.from(json['helpTypes'] ?? []),
     );
@@ -175,60 +168,3 @@ class Availability {
     'helpTypes': helpTypes,
   };
 }
-
-/*
-{
-  "user": {
-    "id": "string",
-    "name": "string",
-    "email": "user@example.com",
-    "verified": true,
-    "competencies": [
-        "string"
-      ],
-    "equipment": [
-      {
-        "name": "string",
-        "place": "Home",
-        "coordinates": [
-          0
-        ]
-      }
-    ],
-    "availability": {
-      "state": "available",
-      "until": "2026-08-07T08:40:16.840Z",
-      "helpTypes": [
-        "urgent"
-      ]
-    }
-  },
-  "token": "string",
-  "tokenType": "Bearer",
-  "expiresIn": 604800
-}
-*/
-/*
-{
-"user" : {
-"id" : "6a76c5095f1cb9f8b04c7685",
-"name" : "Attry",
-"email" : "attry@gmail.com",
-"verified" : false,
-"onboarding" : {
-"status" : "incomplete",
-"step" : 1
-},
-"places" : [ ],
-"competencies" : [ ],
-"equipment" : [ ],
-"availability" : {
-"state" : "available",
-"helpTypes" : [ "urgent", "local", "community" ]
-}
-},
-"token" : "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2YTc2YzUwOTVmMWNiOWY4YjA0Yzc2ODUiLCJlbWFpbCI6ImF0dHJ5QGdtYWlsLmNvbSIsImlhdCI6MTc4NjE3MTE2NCwiZXhwIjoxNzg2Nzc1OTY0LCJpc3MiOiJhaWR5In0.5jdFiemuDwbvR1Lib0qW4tNZFCa2Mx7dCq90yJYViB4",
-"tokenType" : "Bearer",
-"expiresIn" : 604800
-}
-*/

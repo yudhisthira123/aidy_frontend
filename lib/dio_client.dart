@@ -4,7 +4,7 @@ import 'package:frontend/data/secure_storage.dart';
 
 class DioClient {
 
-  final _baseUrl = "https://aidy-mvp.vercel.app/";
+  final _baseUrl = "https://lokale.onrender.com/";
 
   final _receiverTimeout = const Duration(seconds: 60);
   final _connectTimeout = const Duration(seconds: 60);

@@ -16,27 +16,36 @@ class RegistrationProviderNotifier extends AsyncNotifier<AuthResponse?> {
     return SecureStorage().getAuthResponse();
   }
 
-  Future<void> register() async{
+  Future<void> register(String name, String email, String password) async{
     final regDataSourceProvider = ref.read(registrationDataSourceProvider);
 
     state = AsyncValue.loading();
 
     state = await AsyncValue.guard(() async {
-      final result = await regDataSourceProvider.registerUser("Attry", "attry@gmail.com", "password");
-      return switch (result) {
-        Success(value: final authResponse) => authResponse,
-        Failure(exception: final error) => throw error,
-      };
+      final response = await regDataSourceProvider.registerUser(name, email, password);
+
+      final authResponse = AuthResponse.fromJson(response);
+      await SecureStorage().setAuthResponse(authResponse);
+
+      return authResponse;
     });
   }
 
-  Future<Result<UserModel, Exception>> login() async {
+  Future<void> login(String email, String password) async {
 
     final regDataSourceProvider = ref.read(registrationDataSourceProvider);
 
-    final result = await regDataSourceProvider.login("attry@gmail.com", "password");
+    state = AsyncValue.loading();
 
-    return Success(UserModel(fullName: 'fullName', email: 'email'));
+    state = await AsyncValue.guard(() async {
+      final response = await regDataSourceProvider.login(email, password);
+
+      final authResponse = AuthResponse.fromJson(response);
+      await SecureStorage().setAuthResponse(authResponse);
+
+      return authResponse;
+    });
+
   }
 
   Future<void> logout() async {
