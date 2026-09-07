@@ -186,14 +186,14 @@ class _HomeViewState extends ConsumerState<HomeView> {
   @override
   void initState() {
     super.initState();
-    ref.read(locationAsyncNotifierProvider.notifier).startMonitoring();
+    // ref.read(locationAsyncNotifierProvider.notifier).startMonitoring();
   }
 
   @override
   void dispose() {
     super.dispose();
     if (isMonitoring) {
-      ref.read(locationAsyncNotifierProvider.notifier).stopMonitoring();
+      // ref.read(locationAsyncNotifierProvider.notifier).stopMonitoring();
     }
   }
 

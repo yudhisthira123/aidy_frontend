@@ -6,15 +6,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/common/requests_model.dart';
 import 'package:frontend/features/requests/requests_data_source.dart';
 
-final requestsProvider = AsyncNotifierProvider<RequestsProvider, RequestsModel?>(RequestsProvider.new);
+final requestsProvider = AsyncNotifierProvider<RequestsProvider, List<RequestsModel>?>(RequestsProvider.new);
 
-class RequestsProvider extends AsyncNotifier<RequestsModel?> {
+class RequestsProvider extends AsyncNotifier<List<RequestsModel>?> {
   @override
-  Future<RequestsModel?> build() async {
+  Future<List<RequestsModel>?> build() async {
 
     getRequests();
 
-    return null;
+    // return null;
   }
 
 
@@ -40,10 +40,9 @@ class RequestsProvider extends AsyncNotifier<RequestsModel?> {
 
       final response = await requestsProvider.getRequests(limit);
 
-      final requestsRes =  RequestsModel.fromJson(response);
+      final requestsRes = response.map((e) => RequestsModel.fromJson(e as Map<String, dynamic>)).toList();
 
-      print("Requests = $requestsRes");
-
+      return requestsRes;
     }
     );
   }

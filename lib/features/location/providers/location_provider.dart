@@ -1,8 +1,10 @@
 
 
 import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter_background_service/flutter_background_service.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 
@@ -37,8 +39,8 @@ class LocationNotifier extends AsyncNotifier<List<AidyLocation>> {
   Future<Stream<Position>> watchPosition() async {
     final locationSetting = AndroidSettings(
         accuracy: LocationAccuracy.high,
-        distanceFilter: 50,
-        intervalDuration: Duration(seconds: 20),
+        // distanceFilter: 50,
+        intervalDuration: Duration(seconds: 5),
         foregroundNotificationConfig: ForegroundNotificationConfig(
             notificationText: "Tracking your location in the background",
             notificationTitle: "Live location active",
@@ -83,6 +85,31 @@ class LocationNotifier extends AsyncNotifier<List<AidyLocation>> {
       return Future.error('Location services are permanently denied');
     }
 
+    const AndroidNotificationChannel channel = AndroidNotificationChannel(
+      'my_foreground', // id
+      'MY FOREGROUND SERVICE', // title
+      description:
+      'This channel is used for important notifications.', // description
+      importance: Importance.low, // importance must be at low or higher level
+    );
+
+    final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
+
+    if (Platform.isIOS || Platform.isAndroid) {
+      await flutterLocalNotificationsPlugin.initialize(
+          settings: InitializationSettings(
+            iOS: DarwinInitializationSettings(),
+            android: AndroidInitializationSettings('ic_bg_service_small')
+          )
+      );
+    }
+
+    await flutterLocalNotificationsPlugin
+        .resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(channel);
+
     final service = FlutterBackgroundService();
 
     await service.configure(
@@ -91,9 +118,10 @@ class LocationNotifier extends AsyncNotifier<List<AidyLocation>> {
             onStart: onStart,
             autoStart: true,
             isForegroundMode: true,
-            notificationChannelId: 'location_channel',
+            notificationChannelId: 'my_foreground',
             initialNotificationTitle: 'Location tracking',
-            initialNotificationContent: 'Your movement is being tracked'
+            initialNotificationContent: 'Your movement is being tracked',
+          foregroundServiceTypes: [AndroidForegroundType.location]
         )
     );
   }
@@ -106,6 +134,9 @@ class LocationNotifier extends AsyncNotifier<List<AidyLocation>> {
   Future<void> startMonitoring() async {
     ensureLocationPermission();
     locationSubscription = (await watchPosition()).listen((Position pos) async {
+
+      print("startMonitoring: longitude = ${pos.longitude} and latitude = ${pos.latitude}");
+
       return add(AidyLocation(latitude: pos.latitude, longitude: pos.longitude));
     });
   }
@@ -132,13 +163,15 @@ class LocationNotifier extends AsyncNotifier<List<AidyLocation>> {
 
 @pragma('vm:entry-point')
 void onStart(ServiceInstance service) {
+  print("Background service started");
+
   Geolocator.getPositionStream(
       locationSettings: LocationSettings(
-          accuracy: LocationAccuracy.high,
-          distanceFilter: 20
+        accuracy: LocationAccuracy.high,
+        // distanceFilter: 20
       )
   ).listen((Position position) {
-    //print("Lat: ${position.latitude}, Lng: ${position.longitude}");
+    print("Lat: ${position.latitude}, Lng: ${position.longitude}");
   }
   );
 }

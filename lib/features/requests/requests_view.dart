@@ -21,10 +21,26 @@ class _RequestsViewState extends ConsumerState<RequestsView> {
       appBar: AppBar(title: Text('AIDY'),),
       body: requestState.when(
           data: (data){
-            return Text("DATA");
+            return RefreshIndicator(
+              onRefresh: () => ref.read(requestsProvider.notifier).getRequests(),
+              child: data == null ?
+              Text("Failed to load")
+              : ListView.separated(
+                itemCount: data.length,
+                separatorBuilder: (_, _) => Divider(
+                  color: Colors.red,
+                ),
+                itemBuilder: (context, index) {
+                  // final item = data[index];
+                  return Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: Center(child: Text(data[index].description)));
+                },
+              )
+            );
           },
           error: (error, stack){
-            return Text("Error");
+            return Text("Failed to load data");
           },
           loading: (){
             return Text("Loading");

@@ -34,7 +34,7 @@ class RequestsDataSource {
 
   }
 
-  Future<Map<String, dynamic>> getRequests(int limit) async {
+  Future<List<dynamic>> getRequests(int limit) async {
     try {
 
       final response = await dio.get(
@@ -42,7 +42,7 @@ class RequestsDataSource {
         options: Options(headers: {HttpHeaders.contentTypeHeader: "application/json"}),
       );
 
-      return response.data as Map<String, dynamic>;
+      return response.data as List<dynamic>;
     } on DioException catch(error) {
       throw _handleDioError(error);
     }
