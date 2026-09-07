@@ -28,6 +28,14 @@ final router = GoRouter(
                   path: 'quickhelp',
                   builder: (context, state) => const QuickHelpView(),
                 ),
+                GoRoute(
+                  path: 'localsupport',
+                  builder: (context, state) => const QuickHelpView(),
+                ),
+                GoRoute(
+                  path: 'lostandfound',
+                  builder: (context, state) => const QuickHelpView(),
+                ),
               ],
             ),
           ],

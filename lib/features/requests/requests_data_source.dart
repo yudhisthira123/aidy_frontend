@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/common/base_data_source.dart';
 import 'package:frontend/common/constants.dart';
 import 'package:frontend/common/quick_request.dart';
 import 'package:frontend/common/result.dart';
@@ -13,7 +14,7 @@ final requestsSourceProvider = Provider<RequestsDataSource>((ref) {
   return RequestsDataSource(dio: DioClient().provideDio());
 });
 
-class RequestsDataSource {
+class RequestsDataSource extends BaseDataSource {
   final Dio dio;
 
   RequestsDataSource({required this.dio});
@@ -44,20 +45,8 @@ class RequestsDataSource {
 
       return response.data as List<dynamic>;
     } on DioException catch(error) {
-      throw _handleDioError(error);
+      throw handleDioError(error);
     }
   }
-
-  String _handleDioError(DioException error) {
-    if (error.response != null && error.response?.data != null) {
-      final data = error.response?.data;
-      if (data is Map<String, dynamic> && data.containsKey('message')) {
-        return data['message'].toString();
-      }
-      return 'Server error: ${error.response?.statusCode}';
-    }
-    return 'Connection network failure. Please try again.';
-  }
-
 
 }

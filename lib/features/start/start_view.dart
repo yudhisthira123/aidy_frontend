@@ -28,17 +28,17 @@ class _StartViewState extends ConsumerState<StartView> {
               child: Text('Quick Help'),
             ),
           ),
-          Container(
-            child: ElevatedButton(
-              onPressed: () {},
-              child: Text('Local support'),
-            ),
+          ElevatedButton(
+            onPressed: () {
+              context.go('/start/localsupport');
+            },
+            child: Text('Local support'),
           ),
-          Container(
-            child: ElevatedButton(
-              onPressed: () {},
-              child: Text('Lost & Found'),
-            ),
+          ElevatedButton(
+            onPressed: () {
+              context.go('/start/lostandfound');
+            },
+            child: Text('Lost & Found'),
           ),
         ],
       ),
