@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:frontend/features/requests/quick_help_view.dart';
+import 'package:frontend/routes/app_routes.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:go_router/go_router.dart';
 import 'features/location/models/location_model.dart';
 import 'features/location/providers/location_provider.dart';
-import 'features/requests/requests_view.dart';
-import 'features/user_profile/user_profile_view.dart';
 
 const brand = Color(0xFF1B1D36),
     green = Color(0xFF6757D9),
@@ -23,9 +22,8 @@ class MyApp extends ConsumerWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-
-    return MaterialApp(
-      title: 'Flutter Demo',
+    return MaterialApp.router(
+      title: 'Aidy',
       theme: ThemeData(
         // This is the theme of your application.
         //
@@ -44,8 +42,8 @@ class MyApp extends ConsumerWidget {
         // tested with just a hot reload.
         colorScheme: .fromSeed(seedColor: Colors.deepPurple),
       ),
+      routerConfig: router,
       // home: HomeView(),
-      home: MainNavigationView(),
       // home: authState.when(
       //     data: (AuthResponse? authResponse ) {
       //       if(authResponse != null ) {
@@ -63,111 +61,43 @@ class MyApp extends ConsumerWidget {
   }
 }
 
-class MainNavigationView extends ConsumerStatefulWidget {
-  const MainNavigationView({super.key});
+class MainNavigationView extends StatelessWidget {
+  final StatefulNavigationShell navigationShell;
 
-  @override
-  ConsumerState<ConsumerStatefulWidget> createState() {
-    return _MainNavigationViewState();
-  }
-}
+  const MainNavigationView({super.key, required this.navigationShell});
 
-class _MainNavigationViewState extends ConsumerState<MainNavigationView> {
+  void _onTabSelected(int index) {
+    navigationShell.goBranch(
+      index,
 
-  int _currentIndex = 0;
-
-  // The 4 screens representing each tab
-  final List<Widget> _screens = const [
-    StartView(),
-    RequestsView(),
-    WhatsNewView(),
-    ProfileView(),
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
-      ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex,
-          onDestinationSelected: (int index) {
-          setState(() {
-            _currentIndex = index;
-          });
-
-          },
-          destinations: [
-            NavigationDestination(icon: Icon(Icons.home), label: 'Start'),
-            NavigationDestination(icon: Icon(Icons.request_page), label: 'Requests'),
-            NavigationDestination(icon: Icon(Icons.question_mark), label: 'WhatsNew'),
-            NavigationDestination(icon: Icon(Icons.account_circle), label: 'Profile')
-          ]
-      ),
+      // If the user taps the currently selected tab,
+      // go back to that tab's root page.
+      initialLocation: index == navigationShell.currentIndex,
     );
   }
 
-}
-
-class StartView extends ConsumerStatefulWidget {
-  const StartView({super.key});
-
-  @override
-  ConsumerState<ConsumerStatefulWidget> createState() {
-    return _StartViewState();
-  }
-}
-class _StartViewState extends ConsumerState<StartView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('AIDY'),),
-      body: Column(
-        children: [
-          Container(
-            padding: EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(10)
-              ),
-              child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute<void> (builder: (context) => QuickHelpView()
-                      )
-                    );
-                  }, 
-                  child: Text('Quick Help')
-              )
+      body: navigationShell,
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: navigationShell.currentIndex,
+        onDestinationSelected: _onTabSelected,
+        destinations: [
+          NavigationDestination(icon: Icon(Icons.home), label: 'Start'),
+          NavigationDestination(
+            icon: Icon(Icons.request_page),
+            label: 'Requests',
           ),
-          Container(
-            child: ElevatedButton(onPressed: () {}, child: Text('Local support'))
+          NavigationDestination(
+            icon: Icon(Icons.question_mark),
+            label: 'WhatsNew',
           ),
-          Container(
-            child: ElevatedButton(onPressed: () {}, child: Text('Lost & Found'))
+          NavigationDestination(
+            icon: Icon(Icons.account_circle),
+            label: 'Profile',
           ),
         ],
-      )
-    );
-  }
-}
-
-class WhatsNewView extends ConsumerStatefulWidget {
-  const WhatsNewView({super.key});
-
-  @override
-  ConsumerState<ConsumerStatefulWidget> createState() {
-    return _WhatsNewViewState();
-  }
-}
-class _WhatsNewViewState extends ConsumerState<WhatsNewView> {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text('AIDY'),),
-      body: Center(
-          child: Text('Whatsnew?')
       ),
     );
   }
@@ -199,7 +129,6 @@ class _HomeViewState extends ConsumerState<HomeView> {
 
   @override
   Widget build(BuildContext context) {
-
     return ref
         .watch(locationAsyncNotifierProvider)
         .when(
@@ -249,7 +178,12 @@ class _HomeViewState extends ConsumerState<HomeView> {
   String _distanceMessage(List<AidyLocation> listAidyLocations) {
     if (listAidyLocations.length > 1) {
       int secondLastIndex = listAidyLocations.length - 2;
-      double distanceMoved = Geolocator.distanceBetween(listAidyLocations[secondLastIndex].latitude, listAidyLocations[secondLastIndex].longitude, listAidyLocations.last.latitude, listAidyLocations.last.longitude);
+      double distanceMoved = Geolocator.distanceBetween(
+        listAidyLocations[secondLastIndex].latitude,
+        listAidyLocations[secondLastIndex].longitude,
+        listAidyLocations.last.latitude,
+        listAidyLocations.last.longitude,
+      );
       return 'Current Latitude: ${listAidyLocations.last.latitude},\n'
           'Current Longitude: ${listAidyLocations.last.longitude} \n'
           'Distance moved: ${distanceMoved.toStringAsFixed(2)} mts';
