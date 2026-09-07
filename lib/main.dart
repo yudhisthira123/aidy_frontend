@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/routes/app_routes.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
-import 'features/location/models/location_model.dart';
-import 'features/location/providers/location_provider.dart';
 
 const brand = Color(0xFF1B1D36),
     green = Color(0xFF6757D9),
