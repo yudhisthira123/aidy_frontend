@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/data/categories_provider.dart';
 import 'package:frontend/features/user_profile/user_details_view.dart';
 import 'package:frontend/features/user_profile/user_registration_view.dart';
 
@@ -40,6 +41,7 @@ class _ProfileViewState extends ConsumerState<ProfileView> {
         body:  authState.when(
             data: ( authResponse) {
               if(authResponse != null) {
+                ref.read(categoriesProvider.notifier).loadCategories();
                 return UserDetailsView();
               }
               else {

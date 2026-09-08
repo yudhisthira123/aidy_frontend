@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:frontend/common/result.dart';
 import 'package:frontend/common/user_model.dart';
+import 'package:frontend/data/categories_provider.dart';
 import 'package:frontend/data/secure_storage.dart';
 import 'package:frontend/features/user_profile/registration_data_source.dart';
 
@@ -25,6 +25,9 @@ class RegistrationProviderNotifier extends AsyncNotifier<AuthResponse?> {
       final response = await regDataSourceProvider.registerUser(name, email, password);
 
       final authResponse = AuthResponse.fromJson(response);
+
+      ref.read(categoriesProvider.notifier).loadCategories();
+
       await SecureStorage().setAuthResponse(authResponse);
 
       return authResponse;

@@ -4,7 +4,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/common/models/category.dart';
 import 'package:frontend/common/result.dart';
-import 'package:frontend/data/datasources/categories_data_source.dart';
+import 'package:frontend/data/categories_data_source.dart';
 
 final categoriesProvider = AsyncNotifierProvider<CategoriesProviderNotifier, Result<CategoriesResponse, Exception>>(CategoriesProviderNotifier.new);
 
