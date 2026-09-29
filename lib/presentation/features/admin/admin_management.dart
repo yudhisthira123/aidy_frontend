@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart' hide Text;
 
+import '../../../application/admin/admin_service.dart';
 import '../../../domain/gateways/lokale_api.dart';
 import '../../localization/app_localizations.dart';
 import '../../localization/localized_text.dart';
@@ -119,6 +120,7 @@ class _AdminManagementState extends State<AdminManagementScreen> {
     ),
   );
   bool loading = true;
+  late final AdminService admin = AdminService(widget.api);
   int tab = 0;
   String? error;
   Map<String, dynamic> stats = {};
@@ -136,20 +138,14 @@ class _AdminManagementState extends State<AdminManagementScreen> {
       error = null;
     });
     try {
-      final data = await Future.wait([
-        widget.api.request('GET', '/api/admin/stats'),
-        widget.api.request('GET', '/api/admin/users'),
-        widget.api.request('GET', '/api/admin/requests'),
-        widget.api.request('GET', '/api/admin/equipment'),
-        widget.api.request('GET', '/api/admin/categories'),
-      ]);
+      final data = await admin.load();
       if (!mounted) return;
       setState(() {
-        stats = Map<String, dynamic>.from(data[0]['stats'] ?? {});
-        users = data[1]['users'] ?? [];
-        requests = data[2]['requests'] ?? [];
-        equipment = data[3]['equipment'] ?? [];
-        categories = data[4]['categories'] ?? [];
+        stats = data.stats;
+        users = data.users;
+        requests = data.requests;
+        equipment = data.equipment;
+        categories = data.categories;
       });
     } catch (e) {
       if (mounted) setState(() => error = e.toString());
@@ -270,12 +266,9 @@ class _AdminManagementState extends State<AdminManagementScreen> {
       return;
     }
     try {
-      await widget.api.request(
-        existing == null ? 'POST' : 'PATCH',
-        existing == null
-            ? '/api/admin/users'
-            : '/api/admin/users/${existing['id']}',
-        body: result,
+      await admin.saveUser(
+        Map<String, dynamic>.from(result),
+        id: existing?['id']?.toString(),
       );
       message(existing == null ? 'User created.' : 'User updated.');
       await load();
@@ -376,12 +369,9 @@ class _AdminManagementState extends State<AdminManagementScreen> {
     );
     if (result == null || result['name'].toString().isEmpty) return;
     try {
-      await widget.api.request(
-        existing == null ? 'POST' : 'PUT',
-        existing == null
-            ? '/api/admin/equipment'
-            : '/api/admin/equipment/${existing['_id'] ?? existing['id']}',
-        body: result,
+      await admin.saveEquipment(
+        Map<String, dynamic>.from(result),
+        id: (existing?['_id'] ?? existing?['id'])?.toString(),
       );
       message('Equipment saved.');
       await load();
@@ -447,12 +437,9 @@ class _AdminManagementState extends State<AdminManagementScreen> {
     );
     if (result == null || result['name'].toString().isEmpty) return;
     try {
-      await widget.api.request(
-        existing == null ? 'POST' : 'PUT',
-        existing == null
-            ? '/api/admin/categories'
-            : '/api/admin/categories/${existing['_id'] ?? existing['id']}',
-        body: result,
+      await admin.saveCategory(
+        Map<String, dynamic>.from(result),
+        id: (existing?['_id'] ?? existing?['id'])?.toString(),
       );
       message('Category saved.');
       await load();
@@ -526,10 +513,9 @@ class _AdminManagementState extends State<AdminManagementScreen> {
         .where((v) => v.isNotEmpty)
         .toList();
     try {
-      await widget.api.request(
-        'POST',
-        '/api/admin/categories/${category['_id'] ?? category['id']}/subcategories',
-        body: {
+      await admin.addSubcategory(
+        (category['_id'] ?? category['id']).toString(),
+        {
           'name': localized['en']!['name']!.text.trim(),
           'translations': translationPayload(localized),
           'requiredCompetencies': csv(skills.text),
@@ -543,12 +529,12 @@ class _AdminManagementState extends State<AdminManagementScreen> {
     }
   }
 
-  Future<void> remove(String path, String label) async {
+  Future<void> remove(AdminResource resource, String id, String label) async {
     if (!await confirm('Delete $label?', 'This action cannot be undone.')) {
       return;
     }
     try {
-      await widget.api.request('DELETE', path);
+      await admin.delete(resource, id);
       message('$label deleted.');
       await load();
     } catch (e) {
@@ -705,7 +691,8 @@ class _AdminManagementState extends State<AdminManagementScreen> {
                                   if (value == 'edit') userForm(u);
                                   if (value == 'delete') {
                                     remove(
-                                      '/api/admin/users/${u['id']}',
+                                      AdminResource.users,
+                                      u['id'].toString(),
                                       'user',
                                     );
                                   }
@@ -748,14 +735,14 @@ class _AdminManagementState extends State<AdminManagementScreen> {
                                   final id = r['_id'] ?? r['id'];
                                   if (value == 'delete') {
                                     await remove(
-                                      '/api/admin/requests/$id',
+                                      AdminResource.requests,
+                                      id.toString(),
                                       'request',
                                     );
                                   } else {
-                                    await widget.api.request(
-                                      'PATCH',
-                                      '/api/admin/requests/$id',
-                                      body: {'status': value},
+                                    await admin.updateRequestStatus(
+                                      id.toString(),
+                                      value,
                                     );
                                     await load();
                                   }
@@ -796,7 +783,8 @@ class _AdminManagementState extends State<AdminManagementScreen> {
                               ),
                               trailing: IconButton(
                                 onPressed: () => remove(
-                                  '/api/admin/equipment/${e['_id'] ?? e['id']}',
+                                  AdminResource.equipment,
+                                  (e['_id'] ?? e['id']).toString(),
                                   'equipment',
                                 ),
                                 icon: const Icon(Icons.delete_outline),
@@ -825,7 +813,8 @@ class _AdminManagementState extends State<AdminManagementScreen> {
                                   if (v == 'add') addSubcategory(c);
                                   if (v == 'delete') {
                                     remove(
-                                      '/api/admin/categories/$id',
+                                      AdminResource.categories,
+                                      id.toString(),
                                       'category',
                                     );
                                   }
@@ -850,10 +839,20 @@ class _AdminManagementState extends State<AdminManagementScreen> {
                                     (s) => ListTile(
                                       title: Text(s['name'] ?? 'Subcategory'),
                                       trailing: IconButton(
-                                        onPressed: () => remove(
-                                          '/api/admin/categories/$id/subcategories/${s['_id'] ?? s['subId']}',
-                                          'subcategory',
-                                        ),
+                                        onPressed: () async {
+                                          if (!await confirm(
+                                            'Delete subcategory?',
+                                            'This action cannot be undone.',
+                                          )) {
+                                            return;
+                                          }
+                                          await admin.deleteSubcategory(
+                                            id.toString(),
+                                            (s['_id'] ?? s['subId']).toString(),
+                                          );
+                                          message('subcategory deleted.');
+                                          await load();
+                                        },
                                         icon: const Icon(Icons.delete_outline),
                                       ),
                                     ),

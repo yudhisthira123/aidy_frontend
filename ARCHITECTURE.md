@@ -11,7 +11,10 @@ lib/
   app/                    composition root, app lifecycle, theme and navigation
   application/            typed use cases and endpoint orchestration
     auth/                 authentication and session workflows
+    admin/                administration queries and mutations
+    equipment/            shared-equipment catalog workflows
     messages/             messaging REST contracts and pagination
+    profile/              profile, preferences and account lifecycle
     requests/             request discovery, matching and coordination
   domain/                 entities and gateway contracts
   data/                   HTTP and persistence implementations
@@ -63,6 +66,8 @@ fails when an import crosses a forbidden boundary.
 
 - Put an API path and its response mapping in one service/contract method when
   it is used by more than one feature.
+- Presentation screens must not contain API URLs. Endpoint paths, methods, and
+  response envelopes belong to application services.
 - Put reusable visual behavior in `shared`; do not share widgets that still
   contain feature-specific business rules.
 - Keep request variants in the single `AidyRequestModel` contract so help,

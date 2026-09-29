@@ -1,4 +1,35 @@
-part of "../../../main.dart";
+import 'package:flutter/material.dart' hide Text;
+
+import '../../../application/admin/admin_service.dart';
+import '../../../domain/gateways/lokale_api.dart';
+import '../../localization/app_localizations.dart';
+import '../../localization/localized_text.dart';
+import '../../shared/value_formatters.dart';
+
+const _brand = Color(0xFF1B1D36);
+const _green = Color(0xFF6757D9);
+const _coral = Color(0xFFFF5364);
+const _softMint = Color(0xFFE5F4EF);
+
+class _AdminStatusPill extends StatelessWidget {
+  const _AdminStatusPill({required this.label, required this.color});
+
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+    decoration: BoxDecoration(
+      color: color.withValues(alpha: .1),
+      borderRadius: BorderRadius.circular(99),
+    ),
+    child: Text(
+      label,
+      style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w800),
+    ),
+  );
+}
 
 class AdminCenter extends StatefulWidget {
   final LokaleApi api;
@@ -8,6 +39,7 @@ class AdminCenter extends StatefulWidget {
 }
 
 class _AdminCenterState extends State<AdminCenter> {
+  late final AdminService admin = AdminService(widget.api);
   bool loading = true;
   String? error;
   Map<String, dynamic> stats = {};
@@ -25,20 +57,14 @@ class _AdminCenterState extends State<AdminCenter> {
       error = null;
     });
     try {
-      final results = await Future.wait([
-        widget.api.request('GET', '/api/admin/stats'),
-        widget.api.request('GET', '/api/admin/users'),
-        widget.api.request('GET', '/api/admin/requests'),
-        widget.api.request('GET', '/api/admin/equipment'),
-        widget.api.request('GET', '/api/admin/categories'),
-      ]);
+      final results = await admin.load();
       if (!mounted) return;
       setState(() {
-        stats = Map<String, dynamic>.from(results[0]['stats'] ?? {});
-        users = results[1]['users'] ?? [];
-        requests = results[2]['requests'] ?? [];
-        equipment = results[3]['equipment'] ?? [];
-        categories = results[4]['categories'] ?? [];
+        stats = results.stats;
+        users = results.users;
+        requests = results.requests;
+        equipment = results.equipment;
+        categories = results.categories;
       });
     } catch (e) {
       if (mounted) setState(() => error = e.toString());
@@ -49,18 +75,14 @@ class _AdminCenterState extends State<AdminCenter> {
 
   Future<void> changeRole(Map user) async {
     final role = user['role'] == 'admin' ? 'user' : 'admin';
-    await widget.api.request(
-      'PATCH',
-      '/api/admin/users/${user['id']}',
-      body: {'role': role},
-    );
+    await admin.changeUserRole(user['id'].toString(), role);
     await load();
   }
 
   Future<void> deleteRequest(Map request) async {
-    await widget.api.request(
-      'DELETE',
-      '/api/admin/requests/${request['_id'] ?? request['id']}',
+    await admin.delete(
+      AdminResource.requests,
+      (request['_id'] ?? request['id']).toString(),
     );
     await load();
   }
@@ -81,7 +103,7 @@ class _AdminCenterState extends State<AdminCenter> {
                   style: const TextStyle(
                     fontSize: 27,
                     fontWeight: FontWeight.w900,
-                    color: brand,
+                    color: _brand,
                   ),
                 ),
                 Text(
@@ -133,7 +155,7 @@ class _AdminCenterState extends State<AdminCenter> {
                       padding: const EdgeInsets.all(22),
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
-                          colors: [brand, Color(0xFF166554)],
+                          colors: [_brand, Color(0xFF166554)],
                         ),
                         borderRadius: BorderRadius.circular(24),
                       ),
@@ -170,13 +192,13 @@ class _AdminCenterState extends State<AdminCenter> {
                           'Users',
                           stats['totalUsers'],
                           Icons.people_outline,
-                          green,
+                          _green,
                         ),
                         countCard(
                           'Active requests',
                           stats['activeRequests'],
                           Icons.sos_outlined,
-                          coral,
+                          _coral,
                         ),
                         countCard(
                           'Equipment',
@@ -212,7 +234,7 @@ class _AdminCenterState extends State<AdminCenter> {
                                   ? Theme.of(context)
                                         .colorScheme
                                         .surfaceContainerHighest
-                                  : softMint,
+                                  : _softMint,
                               child: Text(
                                 '${u['name'] ?? 'U'}'[0].toUpperCase(),
                               ),
@@ -259,7 +281,7 @@ class _AdminCenterState extends State<AdminCenter> {
                           child: ListTile(
                             leading: const Icon(
                               Icons.assignment_outlined,
-                              color: coral,
+                              color: _coral,
                             ),
                             title: Text(
                               r['title'] ??
@@ -298,7 +320,7 @@ class _AdminCenterState extends State<AdminCenter> {
                           child: ListTile(
                             leading: const Icon(
                               Icons.handyman_outlined,
-                              color: green,
+                              color: _green,
                             ),
                             title: Text(
                               e['name'] ?? 'Equipment',
@@ -309,13 +331,13 @@ class _AdminCenterState extends State<AdminCenter> {
                             subtitle: Text(
                               '${e['location'] ?? 'No location'} · ${e['quantity'] ?? 1} available',
                             ),
-                            trailing: StatusPill(
+                            trailing: _AdminStatusPill(
                               label: e['available'] == false
                                   ? 'Unavailable'
                                   : 'Available',
                               color: e['available'] == false
                                   ? Colors.orange
-                                  : green,
+                                  : _green,
                             ),
                           ),
                         ),

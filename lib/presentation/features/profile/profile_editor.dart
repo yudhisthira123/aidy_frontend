@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart' hide Text;
 import 'package:geolocator/geolocator.dart';
 
+import '../../../application/profile/profile_service.dart';
 import '../../../domain/gateways/lokale_api.dart';
 import '../../localization/app_localizations.dart';
 import '../../localization/localized_text.dart';
@@ -15,6 +16,7 @@ class ProfileEditor extends StatefulWidget {
 }
 
 class _ProfileEditorState extends State<ProfileEditor> {
+  late final ProfileService profile = ProfileService(widget.api);
   late final TextEditingController name;
   late final TextEditingController competencies;
   late final List<Map<String, dynamic>> equipment;
@@ -233,22 +235,18 @@ class _ProfileEditorState extends State<ProfileEditor> {
       error = null;
     });
     try {
-      final result = await widget.api.request(
-        'PATCH',
-        '/api/users/${widget.user['id']}',
-        body: {
-          'name': name.text.trim(),
-          'competencies': competencies.text
-              .split(',')
-              .map((e) => e.trim())
-              .where((e) => e.isNotEmpty)
-              .toList(),
-          'equipment': equipment,
-          'places': places,
-        },
-      );
+      final result = await profile.updateUser(widget.user['id'].toString(), {
+        'name': name.text.trim(),
+        'competencies': competencies.text
+            .split(',')
+            .map((e) => e.trim())
+            .where((e) => e.isNotEmpty)
+            .toList(),
+        'equipment': equipment,
+        'places': places,
+      });
       if (mounted) {
-        Navigator.pop(context, Map<String, dynamic>.from(result['user']));
+        Navigator.pop(context, result);
       }
     } catch (e) {
       if (mounted) setState(() => error = e.toString());

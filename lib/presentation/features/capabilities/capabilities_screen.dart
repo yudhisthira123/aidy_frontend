@@ -17,6 +17,7 @@ class CapabilitiesScreen extends StatefulWidget {
 }
 
 class _CapabilitiesState extends State<CapabilitiesScreen> {
+  late final CapabilitiesService capabilities = CapabilitiesService(widget.api);
   int step = 1;
   bool busy = false;
   String? error;
@@ -83,19 +84,11 @@ class _CapabilitiesState extends State<CapabilitiesScreen> {
       error = null;
     });
     try {
-      await widget.api.request(
-        'PATCH',
-        '/api/user-capabilities',
-        body: payload(),
-      );
+      await capabilities.saveProgress(payload());
       if (step < 6) {
         setState(() => step++);
       } else {
-        final done = await widget.api.request(
-          'POST',
-          '/api/user-capabilities/complete',
-        );
-        widget.onDone(Map<String, dynamic>.from(done['user']));
+        widget.onDone(await capabilities.complete());
       }
     } catch (e) {
       setState(() => error = e.toString());
@@ -105,8 +98,7 @@ class _CapabilitiesState extends State<CapabilitiesScreen> {
   }
 
   Future<void> skip() async {
-    final r = await widget.api.request('POST', '/api/user-capabilities/skip');
-    widget.onDone(Map<String, dynamic>.from(r['user']));
+    widget.onDone(await capabilities.skip());
   }
 
   Widget content() {

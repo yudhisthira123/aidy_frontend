@@ -1,4 +1,13 @@
-part of "../../../main.dart";
+import 'package:flutter/material.dart' hide Text;
+
+import '../../../application/equipment/equipment_service.dart';
+import '../../../domain/gateways/lokale_api.dart';
+import '../../localization/app_localizations.dart';
+import '../../localization/localized_text.dart';
+
+const _brand = Color(0xFF1B1D36);
+const _green = Color(0xFF6757D9);
+const _softMint = Color(0xFFE5F4EF);
 
 class EquipmentCatalog extends StatefulWidget {
   final LokaleApi api;
@@ -8,6 +17,7 @@ class EquipmentCatalog extends StatefulWidget {
 }
 
 class _EquipmentCatalogState extends State<EquipmentCatalog> {
+  late final EquipmentService equipment = EquipmentService(widget.api);
   List items = [];
   bool loading = true;
   String query = '';
@@ -19,11 +29,8 @@ class _EquipmentCatalogState extends State<EquipmentCatalog> {
 
   Future<void> load() async {
     try {
-      final result = await widget.api.request(
-        'GET',
-        '/api/equipment?available=true',
-      );
-      if (mounted) setState(() => items = result['equipment'] ?? []);
+      final result = await equipment.availableEquipment();
+      if (mounted) setState(() => items = result);
     } finally {
       if (mounted) setState(() => loading = false);
     }
@@ -62,7 +69,7 @@ class _EquipmentCatalogState extends State<EquipmentCatalog> {
                     '${visible.length} items available',
                     style: const TextStyle(
                       fontWeight: FontWeight.w800,
-                      color: brand,
+                      color: _brand,
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -82,12 +89,12 @@ class _EquipmentCatalogState extends State<EquipmentCatalog> {
                                   ? Theme.of(context)
                                         .colorScheme
                                         .surfaceContainerHighest
-                                  : softMint,
+                                  : _softMint,
                               borderRadius: BorderRadius.circular(14),
                             ),
                             child: const Icon(
                               Icons.handyman_outlined,
-                              color: green,
+                              color: _green,
                             ),
                           ),
                           title: Text(

@@ -1,4 +1,18 @@
-part of "../../../main.dart";
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart' hide Text;
+
+import '../../../application/profile/profile_service.dart';
+import '../../../domain/gateways/lokale_api.dart';
+import '../../localization/app_localizations.dart';
+import '../../localization/localized_text.dart';
+import '../../shared/section.dart';
+import '../../shared/device_settings.dart';
+import '../admin/admin_management.dart';
+import '../equipment/equipment_catalog.dart';
+import 'notification_preferences.dart';
+import 'profile_editor.dart';
+
+const _green = Color(0xFF6757D9);
 
 class ProfileScreen extends StatefulWidget {
   final LokaleApi api;
@@ -31,6 +45,7 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileState extends State<ProfileScreen> {
+  late final ProfileService profile = ProfileService(widget.api);
   late String state;
   late Set<String> helpTypes;
   @override
@@ -45,14 +60,10 @@ class _ProfileState extends State<ProfileScreen> {
 
   Future<void> save(String v) async {
     setState(() => state = v);
-    final r = await widget.api.request(
-      'PATCH',
-      '/api/users/${widget.user['id']}',
-      body: {
-        'availability': {...(widget.user['availability'] ?? {}), 'state': v},
-      },
-    );
-    widget.onUser(Map<String, dynamic>.from(r['user']));
+    final user = await profile.updateUser(widget.user['id'].toString(), {
+      'availability': {...(widget.user['availability'] ?? {}), 'state': v},
+    });
+    widget.onUser(user);
   }
 
   Future<void> editProfile() async {
@@ -66,18 +77,14 @@ class _ProfileState extends State<ProfileScreen> {
   }
 
   Future<void> saveHelpTypes() async {
-    final r = await widget.api.request(
-      'PATCH',
-      '/api/users/${widget.user['id']}',
-      body: {
-        'availability': {
-          ...(widget.user['availability'] ?? {}),
-          'state': state,
-          'helpTypes': helpTypes.toList(),
-        },
+    final user = await profile.updateUser(widget.user['id'].toString(), {
+      'availability': {
+        ...(widget.user['availability'] ?? {}),
+        'state': state,
+        'helpTypes': helpTypes.toList(),
       },
-    );
-    widget.onUser(Map<String, dynamic>.from(r['user']));
+    });
+    widget.onUser(user);
   }
 
   Future<void> deleteAccount() async {
@@ -116,12 +123,7 @@ class _ProfileState extends State<ProfileScreen> {
     );
     if (confirmed != true) return;
     try {
-      await widget.api.request(
-        'DELETE',
-        '/api/users/me',
-        body: {'password': password.text, 'confirmation': 'DELETE'},
-      );
-      await widget.api.clearToken();
+      await profile.deleteAccount(password.text);
       widget.onLogout();
     } catch (e) {
       if (mounted) {
@@ -134,14 +136,11 @@ class _ProfileState extends State<ProfileScreen> {
   Future<void> testNotification() async {
     try {
       await widget.onNotificationsRefresh();
-      final result = await widget.api.request(
-        'POST',
-        '/api/users/me/test-notification',
-      );
+      final result = await profile.testNotification();
       if (!mounted) return;
-      final sent = result['sent'] ?? 0;
-      final devices = result['devicesFound'] ?? 0;
-      final errors = (result['errorCodes'] as List? ?? []).join(', ');
+      final sent = result.sent;
+      final devices = result.devicesFound;
+      final errors = result.errorCodes.join(', ');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -197,7 +196,7 @@ class _ProfileState extends State<ProfileScreen> {
         children: [
           CircleAvatar(
             radius: 38,
-            backgroundColor: green,
+            backgroundColor: _green,
             child: Text(
               (widget.user['name'] ?? 'A')[0].toUpperCase(),
               style: const TextStyle(fontSize: 28, color: Colors.white),
@@ -229,7 +228,7 @@ class _ProfileState extends State<ProfileScreen> {
                           widget.notificationStatus.startsWith(
                             'Nearby alerts ready',
                           )
-                          ? green
+                          ? _green
                           : Colors.orange,
                     ),
                     title: const Text('Nearby notifications'),

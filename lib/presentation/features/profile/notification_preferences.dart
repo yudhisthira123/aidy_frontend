@@ -1,4 +1,9 @@
-part of "../../../main.dart";
+import 'package:flutter/material.dart' hide Text;
+
+import '../../../application/profile/profile_service.dart';
+import '../../../domain/gateways/lokale_api.dart';
+import '../../localization/localized_text.dart';
+import '../../shared/value_formatters.dart';
 
 class NotificationPreferencesScreen extends StatefulWidget {
   final LokaleApi api;
@@ -16,6 +21,7 @@ class NotificationPreferencesScreen extends StatefulWidget {
 
 class _NotificationPreferencesScreenState
     extends State<NotificationPreferencesScreen> {
+  late final ProfileService profile = ProfileService(widget.api);
   bool enabled = true;
   Map<String, bool> kinds = {'help': true, 'lost': true, 'found': true};
   Set<String> mutedCategories = {};
@@ -53,22 +59,11 @@ class _NotificationPreferencesScreenState
 
   Future<void> load() async {
     try {
-      final results = await Future.wait([
-        widget.api.request('GET', '/api/users/me/notification-preferences'),
-        widget.api.request('GET', '/api/categories?include=subcategories'),
-      ]);
+      final results = await profile.notificationPreferences();
       if (!mounted) return;
-      final preferences = results[0] as Map? ?? {};
-      final taxonomy = results[1] as Map? ?? {};
       setState(() {
-        apply(
-          Map<String, dynamic>.from(
-            preferences['notificationPreferences'] as Map,
-          ),
-        );
-        categories = (taxonomy['categories'] as List? ?? const [])
-            .map((item) => Map<String, dynamic>.from(item as Map))
-            .toList();
+        apply(results.preferences);
+        categories = results.categories;
         error = null;
       });
     } catch (caught) {
@@ -84,22 +79,15 @@ class _NotificationPreferencesScreenState
       error = null;
     });
     try {
-      final response = await widget.api.request(
-        'PUT',
-        '/api/users/me/notification-preferences',
-        body: {
-          'enabled': enabled,
-          'kinds': kinds,
-          'mutedCategories': mutedCategories.toList(),
-          'mutedSubcategories': mutedSubcategories.toList(),
-          'maxDistanceKm': maxDistanceKm,
-        },
-      );
+      final response = await profile.saveNotificationPreferences({
+        'enabled': enabled,
+        'kinds': kinds,
+        'mutedCategories': mutedCategories.toList(),
+        'mutedSubcategories': mutedSubcategories.toList(),
+        'maxDistanceKm': maxDistanceKm,
+      });
       if (mounted) {
-        Navigator.pop(
-          context,
-          Map<String, dynamic>.from(response['notificationPreferences'] as Map),
-        );
+        Navigator.pop(context, response);
       }
     } catch (caught) {
       if (mounted) setState(() => error = caught.toString());

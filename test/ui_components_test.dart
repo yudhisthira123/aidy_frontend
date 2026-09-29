@@ -1,4 +1,5 @@
 import 'package:aidy_mobile/presentation/localization/app_localizations.dart';
+import 'package:aidy_mobile/presentation/shared/section.dart';
 import 'package:aidy_mobile/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';

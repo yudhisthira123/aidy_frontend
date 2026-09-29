@@ -106,35 +106,3 @@ class InfoStep extends StatelessWidget {
     ],
   );
 }
-
-class Section extends StatelessWidget {
-  final String title;
-  final List<String> items;
-  const Section({super.key, required this.title, required this.items});
-  @override
-  Widget build(BuildContext c) => Card(
-    child: Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          if (items.isEmpty)
-            const Text('None added')
-          else
-            ...items.map(
-              (x) => ListTile(
-                dense: true,
-                leading: const Icon(Icons.check_circle_outline, color: green),
-                title: Text(x),
-              ),
-            ),
-        ],
-      ),
-    ),
-  );
-}

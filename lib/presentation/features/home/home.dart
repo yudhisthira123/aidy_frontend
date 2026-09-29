@@ -148,6 +148,7 @@ class Dashboard extends StatefulWidget {
 }
 
 class _DashboardState extends State<Dashboard> {
+  late final CatalogService catalog = CatalogService(widget.api);
   List categories = [];
   @override
   void initState() {
@@ -157,11 +158,8 @@ class _DashboardState extends State<Dashboard> {
 
   Future<void> load() async {
     try {
-      final r = await widget.api.request(
-        'GET',
-        '/api/categories?include=subcategories',
-      );
-      if (mounted) setState(() => categories = r['categories']);
+      final result = await catalog.categories();
+      if (mounted) setState(() => categories = result);
     } catch (_) {}
   }
 
