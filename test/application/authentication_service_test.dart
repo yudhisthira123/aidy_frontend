@@ -74,7 +74,7 @@ void main() {
     expect(api.path, '/api/auth/login');
     expect(api.body, {'email': 'user@example.com', 'password': 'secret'});
     expect(api.token, 'jwt-token');
-    expect(user['name'], 'Amith');
+    expect(user.name, 'Amith');
   });
 
   test('registration normalizes account fields', () async {
@@ -117,7 +117,7 @@ void main() {
       };
     final service = AuthenticationService(api);
 
-    expect((await service.restore())?['id'], 'user-3');
+    expect((await service.restore())?.id, 'user-3');
     expect(api.path, '/api/auth/me');
   });
 

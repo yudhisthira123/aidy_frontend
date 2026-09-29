@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 
+import '../../app/config/app_environment.dart';
 import '../../domain/entities/aidy_request.dart';
 import '../../domain/gateways/lokale_api.dart';
 
@@ -15,10 +16,7 @@ class ApiException implements Exception {
 }
 
 class ApiClient implements LokaleApi {
-  static const defaultBaseUrl = String.fromEnvironment(
-    'API_BASE_URL',
-    defaultValue: 'https://lokale.onrender.com',
-  );
+  static String get defaultBaseUrl => AppEnvironment.current.apiBaseUrl;
   @override
   String get baseUrl => defaultBaseUrl;
   final FlutterSecureStorage _storage;

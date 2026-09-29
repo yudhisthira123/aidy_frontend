@@ -6,8 +6,8 @@ Recorded on 2026-09-29 after migrating the complete Lokale mobile client.
 | --- | --- |
 | Dart formatting | Pass |
 | Flutter analyzer | Pass, zero findings |
-| Unit, widget, and architecture tests | 29 passed |
-| Overall executable-line coverage | 374 / 3,786 (9.88%) |
+| Unit, widget, and architecture tests | 33 passed |
+| Overall executable-line coverage | 392 / 3,805 (10.30%) |
 | Android debug compilation | Pass |
 
 The coverage number is an honest legacy baseline, not a target. New application

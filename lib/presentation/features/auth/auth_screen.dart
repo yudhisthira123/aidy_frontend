@@ -30,7 +30,7 @@ class _AuthState extends State<AuthScreen> {
         password: password.text,
         name: name.text,
       );
-      widget.onDone(user);
+      widget.onDone(user.toJson());
     } catch (e) {
       setState(() => error = e.toString());
     } finally {

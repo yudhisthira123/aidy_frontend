@@ -30,6 +30,19 @@ flutter pub get
 flutter run --dart-define=API_BASE_URL=https://lokale.onrender.com
 ```
 
+Use explicit flavors so local, staging, and production builds never depend on
+source edits:
+
+```bash
+flutter run \
+  --dart-define=APP_FLAVOR=development \
+  --dart-define=API_BASE_URL=http://localhost:3000
+
+flutter build apk --release \
+  --dart-define=APP_FLAVOR=production \
+  --dart-define=API_BASE_URL=https://lokale.onrender.com
+```
+
 ## Optimized Android release
 
 ```bash

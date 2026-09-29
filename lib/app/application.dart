@@ -64,7 +64,7 @@ class _AidyAppState extends State<AidyApp> with WidgetsBindingObserver {
       await notifications.initialize();
       final restoredUser = await authentication.restore();
       if (restoredUser != null) {
-        user = restoredUser;
+        user = restoredUser.toJson();
         await configureNotifications();
       }
     } catch (_) {}

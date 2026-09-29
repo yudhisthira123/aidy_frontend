@@ -1,3 +1,4 @@
+import '../../domain/entities/authenticated_user.dart';
 import '../../domain/gateways/lokale_api.dart';
 
 /// Coordinates authentication and session persistence without depending on UI,
@@ -7,7 +8,7 @@ final class AuthenticationService {
 
   final LokaleApi _api;
 
-  Future<Map<String, dynamic>> authenticate({
+  Future<AuthenticatedUser> authenticate({
     required bool registration,
     required String email,
     required String password,
@@ -24,23 +25,19 @@ final class AuthenticationService {
     );
     final result = Map<String, dynamic>.from(response as Map);
     final token = result['token']?.toString();
-    final user = result['user'];
-    if (token == null || token.isEmpty || user is! Map) {
+    if (token == null || token.isEmpty) {
       throw const FormatException('Authentication response is incomplete.');
     }
+    final user = AuthenticatedUser.fromJson(result['user']);
     await _api.saveToken(token);
-    return Map<String, dynamic>.from(user);
+    return user;
   }
 
-  Future<Map<String, dynamic>?> restore() async {
+  Future<AuthenticatedUser?> restore() async {
     await _api.restore();
     if (_api.token == null) return null;
     final response = await _api.request('GET', '/api/auth/me');
-    final user = (response as Map)['user'];
-    if (user is! Map) {
-      throw const FormatException('Session response is incomplete.');
-    }
-    return Map<String, dynamic>.from(user);
+    return AuthenticatedUser.fromJson((response as Map)['user']);
   }
 
   Future<void> signOut() async {
