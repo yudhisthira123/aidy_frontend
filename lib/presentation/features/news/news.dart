@@ -1,4 +1,9 @@
-part of "../../../main.dart";
+import 'package:flutter/material.dart' hide Text;
+
+import '../../../domain/gateways/lokale_api.dart';
+import '../../localization/localized_text.dart';
+import '../../shared/app_colors.dart';
+import '../equipment/equipment_catalog.dart';
 
 class NewsScreen extends StatelessWidget {
   final LokaleApi api;

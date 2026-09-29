@@ -1,4 +1,20 @@
-part of "../main.dart";
+import 'dart:async';
+
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/material.dart' hide Text;
+import 'package:flutter_localizations/flutter_localizations.dart';
+
+import '../application/auth/authentication_service.dart';
+import '../data/network/api_client.dart';
+import '../infrastructure/notifications/notification_service.dart';
+import '../presentation/features/auth/auth_screen.dart';
+import '../presentation/features/capabilities/capabilities_screen.dart';
+import '../presentation/features/home/home.dart';
+import '../presentation/localization/app_localizations.dart';
+import '../presentation/localization/localized_text.dart';
+import '../presentation/shared/app_colors.dart';
+import '../presentation/shared/device_settings.dart';
+import '../presentation/shared/brand_logo.dart';
 
 class AidyApp extends StatefulWidget {
   const AidyApp({super.key});
@@ -411,25 +427,6 @@ class Splash extends StatelessWidget {
           CircularProgressIndicator(),
         ],
       ),
-    ),
-  );
-}
-
-class BrandLogo extends StatelessWidget {
-  final double size;
-  const BrandLogo({super.key, required this.size});
-  @override
-  Widget build(BuildContext context) => Container(
-    width: size,
-    height: size,
-    padding: EdgeInsets.all(size * .08),
-    decoration: BoxDecoration(
-      color: const Color(0xFFF3F8F6),
-      borderRadius: BorderRadius.circular(size * .24),
-    ),
-    child: Image.asset(
-      'assets/branding/lokale-app-icon.png',
-      fit: BoxFit.contain,
     ),
   );
 }

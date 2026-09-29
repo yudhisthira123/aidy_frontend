@@ -1,4 +1,14 @@
-part of "../../../main.dart";
+import 'package:flutter/material.dart' hide Text;
+import 'package:geolocator/geolocator.dart';
+import 'package:latlong2/latlong.dart';
+
+import '../../../application/requests/request_service.dart';
+import '../../../domain/gateways/lokale_api.dart';
+import '../../localization/app_localizations.dart';
+import '../../localization/localized_text.dart';
+import '../../shared/app_colors.dart';
+import '../../shared/location_widgets.dart';
+import '../../shared/value_formatters.dart';
 
 class CreateRequest extends StatefulWidget {
   final LokaleApi api;

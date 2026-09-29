@@ -1,4 +1,12 @@
-part of "../../../main.dart";
+import 'package:flutter/material.dart' hide Text;
+import 'package:geolocator/geolocator.dart';
+
+import '../../../application/capabilities/capabilities_service.dart';
+import '../../../domain/gateways/lokale_api.dart';
+import '../../localization/app_localizations.dart';
+import '../../localization/localized_text.dart';
+import '../../shared/location_widgets.dart';
+import '../../shared/ui_components.dart';
 
 class CapabilitiesScreen extends StatefulWidget {
   final LokaleApi api;

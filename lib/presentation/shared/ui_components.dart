@@ -1,4 +1,8 @@
-part of "../../main.dart";
+import 'package:flutter/material.dart' hide Text;
+
+import '../localization/app_localizations.dart';
+import '../localization/localized_text.dart';
+import 'app_colors.dart';
 
 class StatusPill extends StatelessWidget {
   final String label;

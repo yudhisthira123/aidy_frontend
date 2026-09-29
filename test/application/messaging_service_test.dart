@@ -20,7 +20,7 @@ void main() {
               };
       final service = MessagingService(api);
 
-      expect((await service.conversations()).single['_id'], 'conversation-1');
+      expect((await service.conversations()).single.id, 'conversation-1');
       expect((await service.users()).single['id'], 'user-1');
     });
 
@@ -63,7 +63,7 @@ void main() {
         api.path,
         '/api/conversations/conversation-1/messages?beforeId=message+1&limit=50',
       );
-      expect(page.messages.single['_id'], 'message-2');
+      expect(page.messages.single.id, 'message-2');
       expect(page.hasMore, isTrue);
     });
 
@@ -77,7 +77,7 @@ void main() {
       final service = MessagingService(api);
 
       final sent = await service.send('conversation-1', 'On my way');
-      expect(sent['_id'], 'message-1');
+      expect(sent.id, 'message-1');
       expect(api.body, {'body': 'On my way'});
 
       await service.markRead('conversation-1');

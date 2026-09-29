@@ -1,4 +1,9 @@
-part of "../../../main.dart";
+import 'package:flutter/material.dart' hide Text;
+
+import '../../../application/auth/authentication_service.dart';
+import '../../localization/localized_text.dart';
+import '../../shared/app_colors.dart';
+import '../../shared/brand_logo.dart';
 
 class AuthScreen extends StatefulWidget {
   final AuthenticationService authentication;

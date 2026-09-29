@@ -6,6 +6,9 @@ and reusable UI remain outside those domains. This is a pragmatic modular
 monolith: it keeps the application easy to navigate without creating a package
 for every small class.
 
+Every Dart file is an independent module with explicit imports. The codebase
+does not use `part` or `part of`; this is enforced by an architecture test.
+
 ```text
 lib/
   app/                    composition root, app lifecycle, theme and navigation
@@ -78,6 +81,11 @@ fails when an import crosses a forbidden boundary.
   extending the app shell with endpoint-specific conditionals.
 - Keep classes responsible for one concern; split a file when presentation,
   transport, and serialization logic begin to mix.
+- Messaging separates the conversation list from an active conversation.
+  Request discovery and helper inboxes keep their reusable cards in dedicated
+  widget modules.
+- External messaging payloads are parsed into `Conversation` and
+  `ConversationMessage` domain entities before reaching presentation.
 
 ## Quality gates
 

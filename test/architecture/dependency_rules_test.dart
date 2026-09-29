@@ -27,6 +27,29 @@ void expectNoDependencies(String directory, List<RegExp> forbidden) {
 }
 
 void main() {
+  test('source modules use explicit imports instead of library parts', () {
+    for (final file in dartFiles('lib')) {
+      final source = file.readAsStringSync();
+      expect(
+        RegExp(r'^part(?: of)?\s', multiLine: true).hasMatch(source),
+        isFalse,
+        reason: '${file.path} still uses implicit library coupling.',
+      );
+    }
+  });
+
+  test('presentation contains no raw API endpoint orchestration', () {
+    for (final file in dartFiles('lib/presentation/features')) {
+      final source = file.readAsStringSync();
+      expect(
+        RegExp(r'''\.request\(\s*['"](?:GET|POST|PUT|PATCH|DELETE)''')
+            .hasMatch(source),
+        isFalse,
+        reason: '${file.path} owns an HTTP method or API path.',
+      );
+    }
+  });
+
   test('domain is framework-independent and depends on no outer layer', () {
     expectNoDependencies('lib/domain', [
       RegExp(r"package:flutter"),

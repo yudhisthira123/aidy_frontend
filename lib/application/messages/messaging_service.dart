@@ -1,9 +1,10 @@
 import '../../domain/gateways/lokale_api.dart';
+import '../../domain/entities/conversation.dart';
 
 final class MessagePage {
   const MessagePage({required this.messages, required this.hasMore});
 
-  final List<Map<String, dynamic>> messages;
+  final List<ConversationMessage> messages;
   final bool hasMore;
 }
 
@@ -14,8 +15,10 @@ final class MessagingService {
 
   final LokaleApi _api;
 
-  Future<List<Map<String, dynamic>>> conversations() async =>
-      _items(await _api.request('GET', '/api/conversations'), 'conversations');
+  Future<List<Conversation>> conversations() async => _items(
+    await _api.request('GET', '/api/conversations'),
+    'conversations',
+  ).map(Conversation.fromJson).toList(growable: false);
 
   Future<List<Map<String, dynamic>>> users() async =>
       _items(await _api.request('GET', '/api/conversations/users'), 'users');
@@ -37,21 +40,25 @@ final class MessagingService {
     await _api.request('POST', '/api/conversations/channels', body: body);
   }
 
-  Future<Map<String, dynamic>> startDirect(String userId) async {
+  Future<Conversation> startDirect(String userId) async {
     final response = await _api.request(
       'POST',
       '/api/conversations/direct',
       body: {'userId': userId},
     );
-    return Map<String, dynamic>.from(response['conversation'] as Map);
+    return Conversation.fromJson(
+      Map<String, dynamic>.from(response['conversation'] as Map),
+    );
   }
 
-  Future<Map<String, dynamic>> join(String conversationId) async {
+  Future<Conversation> join(String conversationId) async {
     final response = await _api.request(
       'POST',
       '/api/conversations/$conversationId/join',
     );
-    return Map<String, dynamic>.from(response['conversation'] as Map);
+    return Conversation.fromJson(
+      Map<String, dynamic>.from(response['conversation'] as Map),
+    );
   }
 
   Future<MessagePage> messages(
@@ -72,18 +79,23 @@ final class MessagingService {
       '/api/conversations/$conversationId/messages$query',
     );
     return MessagePage(
-      messages: _items(response, 'messages'),
+      messages: _items(
+        response,
+        'messages',
+      ).map(ConversationMessage.fromJson).toList(growable: false),
       hasMore: response['pagination']?['hasMore'] == true,
     );
   }
 
-  Future<Map<String, dynamic>> send(String conversationId, String body) async {
+  Future<ConversationMessage> send(String conversationId, String body) async {
     final response = await _api.request(
       'POST',
       '/api/conversations/$conversationId/messages',
       body: {'body': body},
     );
-    return Map<String, dynamic>.from(response['message'] as Map);
+    return ConversationMessage.fromJson(
+      Map<String, dynamic>.from(response['message'] as Map),
+    );
   }
 
   Future<void> markRead(String conversationId) async {

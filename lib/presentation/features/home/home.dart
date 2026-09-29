@@ -1,4 +1,17 @@
-part of "../../../main.dart";
+import 'package:flutter/material.dart' hide Text;
+
+import '../../../application/catalog/catalog_service.dart';
+import '../../../domain/gateways/lokale_api.dart';
+import '../../localization/app_localizations.dart';
+import '../../localization/localized_text.dart';
+import '../../shared/app_colors.dart';
+import '../../shared/brand_logo.dart';
+import '../messages/messaging.dart';
+import '../news/news.dart';
+import '../profile/profile_screen.dart';
+import '../requests/create_request.dart';
+import '../requests/helper_inbox.dart';
+import '../requests/request_list.dart';
 
 class HomeShell extends StatefulWidget {
   final LokaleApi api;
