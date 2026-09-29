@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "57394565294",
+    "project_id": "aidy-43233",
+    "storage_bucket": "aidy-43233.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:57394565294:android:276135cc1f1259b0951d3f",
+        "android_client_info": {
+          "package_name": "com.aidy.aidy_mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCM9YI0WoHfULcs-XKu8_NDRmfwZkqswkA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

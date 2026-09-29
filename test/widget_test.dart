@@ -1,30 +1,119 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
+import 'package:aidy_mobile/main.dart';
+import 'package:aidy_mobile/core/app_localizations.dart';
+import 'package:aidy_mobile/core/localized_text.dart' as localized;
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:frontend/main.dart';
-
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
-
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+  testWidgets('shows Lokale while restoring the session', (tester) async {
+    await tester.pumpWidget(const AidyApp());
+    await tester.pump(const Duration(milliseconds: 100));
+    expect(find.text('Lokale'), findsOneWidget);
   });
+
+  test('all static option keys resolve in every supported language', () {
+    for (final locale in AppLocalizations.supportedLocales) {
+      final translations = AppLocalizations(Locale(locale.languageCode));
+      for (final key in AppLocalizations.supportedStaticOptionKeys) {
+        expect(translations.enumValue(key), isNotEmpty);
+        expect(translations.enumValue(key), isNot(key));
+      }
+    }
+  });
+
+  test('all static content keys exist in every supported language', () {
+    for (final locale in AppLocalizations.supportedLocales) {
+      final translations = AppLocalizations(Locale(locale.languageCode));
+      for (final key in AppLocalizations.supportedStaticContentKeys) {
+        expect(
+          translations.hasStaticContentTranslation(key),
+          isTrue,
+          reason: '${locale.languageCode} is missing "$key"',
+        );
+      }
+    }
+  });
+
+  testWidgets('localized system text remains readable in dark mode', (
+    tester,
+  ) async {
+    final scheme = ColorScheme.fromSeed(
+      seedColor: const Color(0xFF6757D9),
+      brightness: Brightness.dark,
+    );
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('de'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        theme: ThemeData(colorScheme: scheme, brightness: Brightness.dark),
+        home: const Scaffold(
+          body: localized.Text(
+            'Nearby notifications',
+            style: TextStyle(color: Color(0xFF1B1D36)),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Benachrichtigungen in der Nähe'), findsOneWidget);
+    final rendered = tester.widget<Text>(
+      find.text('Benachrichtigungen in der Nähe'),
+    );
+    expect(rendered.style?.color, scheme.onSurface);
+  });
+
+  testWidgets('input labels and hints use the selected language', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        locale: const Locale('de'),
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        home: Scaffold(
+          body: Builder(
+            builder: (context) => TextField(
+              decoration: localized.localizedInput(
+                context,
+                const InputDecoration(
+                  labelText: 'Location label',
+                  hintText: 'Address or landmark',
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('Standortbezeichnung'), findsOneWidget);
+    expect(find.text('Adresse oder Orientierungspunkt'), findsOneWidget);
+  });
+
+  test(
+    'dynamic notification feedback is localized without changing counts',
+    () {
+      const translations = AppLocalizations(Locale('de'));
+      expect(
+        translations.t('2 nearby devices notified successfully.'),
+        '2 Geräte in der Nähe erfolgreich benachrichtigt.',
+      );
+      expect(
+        translations.t('Test notification sent to 1 device.'),
+        'Testbenachrichtigung an 1 Gerät gesendet.',
+      );
+    },
+  );
 }
