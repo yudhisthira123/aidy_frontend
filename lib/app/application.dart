@@ -3,9 +3,9 @@ part of "../main.dart";
 class DeviceSettings {
   static const channel = MethodChannel('lokale/device_settings');
   static Future<void> open(String section) async {
-    if (Platform.isAndroid) {
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
       await channel.invokeMethod(section);
-    } else if (Platform.isIOS) {
+    } else if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
       await launchUrl(Uri.parse('app-settings:'));
     }
   }

@@ -264,7 +264,7 @@ class _ProfileState extends State<ProfileScreen> {
               ),
             ),
           ),
-          if (Platform.isAndroid) ...[
+          if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) ...[
             const SizedBox(height: 12),
             Card(
               child: Padding(

@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
@@ -26,7 +24,9 @@ class NotificationService {
   Stream<RemoteMessage> get messages => FirebaseMessaging.onMessage;
 
   Future<AuthorizationStatus> permissionStatus() async {
-    if (kIsWeb || !(Platform.isAndroid || Platform.isIOS)) {
+    if (kIsWeb ||
+        !(defaultTargetPlatform == TargetPlatform.android ||
+            defaultTargetPlatform == TargetPlatform.iOS)) {
       return AuthorizationStatus.denied;
     }
     return (await FirebaseMessaging.instance.getNotificationSettings())
@@ -38,7 +38,11 @@ class NotificationService {
       status == AuthorizationStatus.provisional;
 
   Future<void> initialize() async {
-    if (kIsWeb || !(Platform.isAndroid || Platform.isIOS)) return;
+    if (kIsWeb ||
+        !(defaultTargetPlatform == TargetPlatform.android ||
+            defaultTargetPlatform == TargetPlatform.iOS)) {
+      return;
+    }
     if (Firebase.apps.isEmpty) {
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
@@ -143,7 +147,9 @@ class NotificationService {
   }
 
   Future<String> register({bool requestPermission = false}) async {
-    if (kIsWeb || !(Platform.isAndroid || Platform.isIOS)) {
+    if (kIsWeb ||
+        !(defaultTargetPlatform == TargetPlatform.android ||
+            defaultTargetPlatform == TargetPlatform.iOS)) {
       return 'Notifications unavailable on this platform';
     }
     final messaging = FirebaseMessaging.instance;
@@ -175,7 +181,9 @@ class NotificationService {
       '/api/users/me/push-token',
       body: {
         'token': token,
-        'platform': Platform.isIOS ? 'ios' : 'android',
+        'platform': defaultTargetPlatform == TargetPlatform.iOS
+            ? 'ios'
+            : 'android',
         'deviceId': deviceId,
       },
     );
@@ -188,7 +196,9 @@ class NotificationService {
             '/api/users/me/push-token',
             body: {
               'token': next,
-              'platform': Platform.isIOS ? 'ios' : 'android',
+              'platform': defaultTargetPlatform == TargetPlatform.iOS
+                  ? 'ios'
+                  : 'android',
               'deviceId': deviceId,
             },
           );
