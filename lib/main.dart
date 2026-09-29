@@ -11,8 +11,8 @@ import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'application/auth/authentication_service.dart';
+import 'application/requests/request_service.dart';
 import 'data/network/api_client.dart';
-import 'domain/entities/aidy_request.dart';
 import 'domain/gateways/lokale_api.dart';
 import 'infrastructure/notifications/notification_service.dart';
 import 'presentation/features/admin/admin_management.dart';

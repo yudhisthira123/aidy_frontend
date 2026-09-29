@@ -1,59 +1,7 @@
 import 'package:aidy_mobile/application/auth/authentication_service.dart';
-import 'package:aidy_mobile/domain/entities/aidy_request.dart';
-import 'package:aidy_mobile/domain/gateways/lokale_api.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-final class FakeLokaleApi implements LokaleApi {
-  @override
-  String get baseUrl => 'https://example.test';
-  @override
-  String? token;
-  @override
-  String language = 'en';
-  @override
-  void Function()? onUnauthorized;
-
-  String? method;
-  String? path;
-  Object? body;
-  dynamic response;
-  Object? error;
-  bool restored = false;
-  bool cleared = false;
-
-  @override
-  Future<void> clearToken() async {
-    token = null;
-    cleared = true;
-  }
-
-  @override
-  Future<List<AidyRequestModel>> getRequests({
-    int limit = 50,
-    String? cursor,
-  }) async => [];
-
-  @override
-  Future<String?> readLocal(String key) async => null;
-
-  @override
-  Future<dynamic> request(String method, String path, {Object? body}) async {
-    this.method = method;
-    this.path = path;
-    this.body = body;
-    if (error case final failure?) throw failure;
-    return response;
-  }
-
-  @override
-  Future<void> restore() async => restored = true;
-
-  @override
-  Future<void> saveToken(String value) async => token = value;
-
-  @override
-  Future<void> writeLocal(String key, String value) async {}
-}
+import '../support/fake_lokale_api.dart';
 
 void main() {
   test('login saves the token and returns the user', () async {

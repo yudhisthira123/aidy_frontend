@@ -17,6 +17,7 @@ class RequestDetail extends StatefulWidget {
 }
 
 class _RequestDetailState extends State<RequestDetail> {
+  late final RequestService requests = RequestService(widget.api);
   final message = TextEditingController();
   late Map<String, dynamic> x;
   Timer? poller;
@@ -38,20 +39,10 @@ class _RequestDetailState extends State<RequestDetail> {
 
   Future<void> refresh() async {
     try {
-      final response = await widget.api.request(
-        'GET',
-        widget.canDelete ? '/api/requests' : '/api/requests/helper/inbox',
+      final updated = await requests.findCurrent(
+        x['_id'].toString(),
+        owned: widget.canDelete,
       );
-      final list = response is List
-          ? response
-          : response['requests'] as List? ?? [];
-      Map? updated;
-      for (final item in list.cast<Map>()) {
-        if ('${item['_id']}' == '${x['_id']}') {
-          updated = item;
-          break;
-        }
-      }
       if (updated != null && mounted) {
         final value = Map<String, dynamic>.from(updated);
         setState(() => x = value);
@@ -61,10 +52,9 @@ class _RequestDetailState extends State<RequestDetail> {
 
   Future<void> send() async {
     if (message.text.trim().isEmpty) return;
-    final created = await widget.api.request(
-      'POST',
-      '/api/requests/${x['_id']}/messages',
-      body: {'body': message.text.trim()},
+    final created = await requests.sendMessage(
+      x['_id'].toString(),
+      message.text.trim(),
     );
     setState(() {
       final messages = List.from(x['messages'] as List? ?? [])..add(created);
@@ -94,17 +84,13 @@ class _RequestDetailState extends State<RequestDetail> {
       ),
     );
     if (confirmed != true) return;
-    await widget.api.request('DELETE', '/api/requests/${x['_id']}');
+    await requests.delete(x['_id'].toString());
     if (mounted) Navigator.pop(context);
   }
 
   Future<void> updateStatus(String status) async {
     try {
-      final updated = await widget.api.request(
-        'PATCH',
-        '/api/requests/${x['_id']}/status',
-        body: {'status': status},
-      );
+      final updated = await requests.updateStatus(x['_id'].toString(), status);
       if (mounted) {
         setState(() => x = Map<String, dynamic>.from(updated));
         ScaffoldMessenger.of(context).showSnackBar(

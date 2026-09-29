@@ -8,6 +8,7 @@ class RequestsScreen extends StatefulWidget {
 }
 
 class _RequestsState extends State<RequestsScreen> {
+  late final RequestService requests = RequestService(widget.api);
   List<Map<String, dynamic>> discovered = [];
   List<Map<String, dynamic>> mine = [];
   List<Map<String, dynamic>> categories = [];
@@ -34,26 +35,12 @@ class _RequestsState extends State<RequestsScreen> {
   Future<void> load() async {
     if (mounted) setState(() => loading = true);
     try {
-      final results = await Future.wait([
-        widget.api.getRequests(),
-        widget.api.request('GET', '/api/categories?include=subcategories'),
-        widget.api.request('GET', '/api/users/me/location'),
-      ]);
-      final owned = results[0];
-      final taxonomy = results[1] as Map? ?? {};
-      final locationEnvelope = results[2] as Map? ?? {};
-      final location = locationEnvelope['location'] as Map?;
+      final overview = await requests.overview();
+      final location = overview.savedLocation;
       if (!mounted) return;
       setState(() {
-        mine =
-            (owned is List<AidyRequestModel>
-                    ? owned
-                    : const <AidyRequestModel>[])
-                .map((item) => item.toJson())
-                .toList();
-        categories = (taxonomy['categories'] as List? ?? const [])
-            .map((item) => Map<String, dynamic>.from(item as Map))
-            .toList();
+        mine = overview.mine.map((item) => item.toJson()).toList();
+        categories = overview.categories;
         if (location != null) {
           latitude = (location['latitude'] as num?)?.toDouble();
           longitude = (location['longitude'] as num?)?.toDouble();
@@ -74,31 +61,23 @@ class _RequestsState extends State<RequestsScreen> {
     if (loadMore && nextCursor == null) return;
     if (loadMore && mounted) setState(() => loadingMore = true);
     try {
-      final query = Uri(
-        queryParameters: {
-          'latitude': latitude!.toStringAsFixed(7),
-          'longitude': longitude!.toStringAsFixed(7),
-          'radiusKm': radiusKm.toString(),
-          'kind': kind,
-          'limit': '50',
-          if (category != 'all') 'category': category,
-          if (subcategory != 'all') 'subcategory': subcategory,
-          if (loadMore && nextCursor != null) 'cursor': nextCursor!,
-        },
-      ).query;
-      final response = await widget.api.request(
-        'GET',
-        '/api/requests/discover?$query',
-      );
+      final page = await requests.discover({
+        'latitude': latitude!.toStringAsFixed(7),
+        'longitude': longitude!.toStringAsFixed(7),
+        'radiusKm': radiusKm.toString(),
+        'kind': kind,
+        'limit': '50',
+        if (category != 'all') 'category': category,
+        if (subcategory != 'all') 'subcategory': subcategory,
+        if (loadMore && nextCursor != null) 'cursor': nextCursor!,
+      });
       if (!mounted) return;
       setState(() {
-        final page = (response['requests'] as List? ?? const [])
-            .map((item) => Map<String, dynamic>.from(item as Map))
-            .toList();
-        discovered = loadMore ? [...discovered, ...page] : page;
-        final pagination = response['pagination'] as Map? ?? const {};
-        hasMore = pagination['hasMore'] == true;
-        nextCursor = pagination['nextCursor']?.toString();
+        discovered = loadMore
+            ? [...discovered, ...page.requests]
+            : page.requests;
+        hasMore = page.hasMore;
+        nextCursor = page.nextCursor;
         error = null;
       });
     } catch (caught) {
@@ -132,15 +111,11 @@ class _RequestsState extends State<RequestsScreen> {
           timeLimit: Duration(seconds: 15),
         ),
       );
-      await widget.api.request(
-        'PUT',
-        '/api/users/me/location',
-        body: {
-          'latitude': position.latitude,
-          'longitude': position.longitude,
-          'accuracyMeters': position.accuracy,
-          'source': 'gps',
-        },
+      await requests.updateLocation(
+        latitude: position.latitude,
+        longitude: position.longitude,
+        accuracyMeters: position.accuracy,
+        source: 'gps',
       );
       if (!mounted) return;
       setState(() {

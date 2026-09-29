@@ -15,6 +15,7 @@ class CreateRequest extends StatefulWidget {
 }
 
 class _CreateRequestState extends State<CreateRequest> {
+  late final RequestService requests = RequestService(widget.api);
   String? sub, urgency = 'immediately';
   double? lat, lon;
   bool busy = false;
@@ -122,32 +123,28 @@ class _CreateRequestState extends State<CreateRequest> {
     if (!await preview()) return;
     setState(() => busy = true);
     try {
-      final created = await widget.api.request(
-        'POST',
-        '/api/requests',
-        body: {
-          'kind': isLostFound
-              ? (widget.initialKind ??
-                    (sub!.startsWith('found') ? 'found' : 'lost'))
-              : 'help',
-          'mainCategory': widget.category['id'],
-          'subcategory': sub,
-          'location': {
-            'label': place.text,
-            'coordinates': [lon, lat],
-          },
-          if (!isLostFound) 'urgency': urgency,
-          if (!isLostFound) 'period': period.text,
-          if (!isLostFound)
-            'equipmentRequired': equipment.text
-                .split(',')
-                .map((value) => value.trim())
-                .where((value) => value.isNotEmpty)
-                .toList(),
-          if (isLostFound) 'contactPreference': contact.text.trim(),
-          'description': description.text,
+      final created = await requests.create({
+        'kind': isLostFound
+            ? (widget.initialKind ??
+                  (sub!.startsWith('found') ? 'found' : 'lost'))
+            : 'help',
+        'mainCategory': widget.category['id'],
+        'subcategory': sub,
+        'location': {
+          'label': place.text,
+          'coordinates': [lon, lat],
         },
-      );
+        if (!isLostFound) 'urgency': urgency,
+        if (!isLostFound) 'period': period.text,
+        if (!isLostFound)
+          'equipmentRequired': equipment.text
+              .split(',')
+              .map((value) => value.trim())
+              .where((value) => value.isNotEmpty)
+              .toList(),
+        if (isLostFound) 'contactPreference': contact.text.trim(),
+        'description': description.text,
+      });
       if (mounted) {
         final summary = created['notificationSummary'] as Map? ?? {};
         final sent = summary['sent'] ?? 0;

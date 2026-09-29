@@ -4,6 +4,7 @@ import 'package:flutter/material.dart' hide Text;
 import 'package:intl/intl.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io;
 
+import '../../../application/messages/messaging_service.dart';
 import '../../../domain/gateways/lokale_api.dart';
 import '../../localization/app_localizations.dart';
 import '../../localization/localized_text.dart';
@@ -28,6 +29,7 @@ class MessagingScreen extends StatefulWidget {
 
 class _MessagingScreenState extends State<MessagingScreen>
     with WidgetsBindingObserver {
+  late final MessagingService messaging = MessagingService(widget.api);
   List<Map<String, dynamic>> conversations = [];
   bool loading = true;
   String? error;
@@ -90,12 +92,10 @@ class _MessagingScreenState extends State<MessagingScreen>
     if (!appActive || requestInFlight) return;
     requestInFlight = true;
     try {
-      final response = await widget.api.request('GET', '/api/conversations');
+      final response = await messaging.conversations();
       if (!mounted) return;
       setState(() {
-        conversations = (response['conversations'] as List? ?? [])
-            .map((item) => Map<String, dynamic>.from(item))
-            .toList();
+        conversations = response;
         error = null;
       });
       if (widget.openedConversation.value != null) {
@@ -175,15 +175,11 @@ class _MessagingScreenState extends State<MessagingScreen>
     );
     if (submit != true || name.text.trim().isEmpty) return;
     try {
-      await widget.api.request(
-        'POST',
-        '/api/conversations/channels',
-        body: {
-          'name': name.text.trim(),
-          'description': description.text.trim(),
-          'visibility': private ? 'private' : 'public',
-          if (parent != null) 'parentId': parent['_id'],
-        },
+      await messaging.createChannel(
+        name: name.text.trim(),
+        description: description.text.trim(),
+        visibility: private ? 'private' : 'public',
+        parentId: parent?['_id']?.toString(),
       );
       await load();
     } catch (next) {
@@ -196,14 +192,8 @@ class _MessagingScreenState extends State<MessagingScreen>
 
   Future<void> startDirectMessage() async {
     try {
-      final response = await widget.api.request(
-        'GET',
-        '/api/conversations/users',
-      );
+      final users = await messaging.users();
       if (!mounted) return;
-      final users = (response['users'] as List? ?? [])
-          .map((item) => Map<String, dynamic>.from(item))
-          .toList();
       final selected = await showModalBottomSheet<Map<String, dynamic>>(
         context: context,
         showDragHandle: true,
@@ -211,15 +201,9 @@ class _MessagingScreenState extends State<MessagingScreen>
         builder: (context) => _PeoplePicker(users: users),
       );
       if (selected == null) return;
-      final created = await widget.api.request(
-        'POST',
-        '/api/conversations/direct',
-        body: {'userId': selected['id']},
-      );
+      final created = await messaging.startDirect(selected['id'].toString());
       if (!mounted) return;
-      await openConversation(
-        Map<String, dynamic>.from(created['conversation']),
-      );
+      await openConversation(created);
       await load();
     } catch (next) {
       if (mounted) {
@@ -231,11 +215,7 @@ class _MessagingScreenState extends State<MessagingScreen>
 
   Future<void> openConversation(Map<String, dynamic> conversation) async {
     if (conversation['type'] == 'channel' && conversation['joined'] != true) {
-      final joined = await widget.api.request(
-        'POST',
-        '/api/conversations/${conversation['_id']}/join',
-      );
-      conversation = Map<String, dynamic>.from(joined['conversation']);
+      conversation = await messaging.join(conversation['_id'].toString());
     }
     if (!mounted) return;
     await Navigator.push(
@@ -521,6 +501,7 @@ class ConversationScreen extends StatefulWidget {
 
 class _ConversationScreenState extends State<ConversationScreen>
     with WidgetsBindingObserver {
+  late final MessagingService messaging = MessagingService(widget.api);
   final message = TextEditingController();
   final scroll = ScrollController();
   List<Map<String, dynamic>> messages = [];
@@ -584,7 +565,7 @@ class _ConversationScreenState extends State<ConversationScreen>
           messages.add(incoming);
         }
       });
-      widget.api.request('POST', '/api/conversations/$conversationId/read');
+      messaging.markRead(conversationId);
       WidgetsBinding.instance.addPostFrameCallback((_) => jumpToBottom());
     });
     socket!.on('conversation:message-updated', (payload) {
@@ -663,18 +644,15 @@ class _ConversationScreenState extends State<ConversationScreen>
     if (!appActive || requestInFlight) return;
     requestInFlight = true;
     try {
-      final lastMessageId = messages.isEmpty ? null : messages.last['_id'];
-      final after = incremental && lastMessageId != null
-          ? '?afterId=${Uri.encodeQueryComponent(lastMessageId.toString())}'
-          : '';
-      final response = await widget.api.request(
-        'GET',
-        '/api/conversations/${widget.conversation['_id']}/messages$after',
+      final lastMessageId = messages.isEmpty
+          ? null
+          : messages.last['_id']?.toString();
+      final response = await messaging.messages(
+        widget.conversation['_id'].toString(),
+        afterId: incremental ? lastMessageId : null,
       );
       if (!mounted) return;
-      final incoming = (response['messages'] as List? ?? [])
-          .map((item) => Map<String, dynamic>.from(item))
-          .toList();
+      final incoming = response.messages;
       final initialLoad = !incremental && messages.isEmpty;
       setState(() {
         if (incremental) {
@@ -684,7 +662,7 @@ class _ConversationScreenState extends State<ConversationScreen>
           );
         } else if (initialLoad) {
           messages = incoming;
-          hasOlder = response['pagination']?['hasMore'] == true;
+          hasOlder = response.hasMore;
         } else {
           final refreshed = {
             for (final item in incoming) item['_id'].toString(): item,
@@ -701,10 +679,7 @@ class _ConversationScreenState extends State<ConversationScreen>
         error = null;
       });
       if (incoming.isNotEmpty) {
-        await widget.api.request(
-          'POST',
-          '/api/conversations/${widget.conversation['_id']}/read',
-        );
+        await messaging.markRead(widget.conversation['_id'].toString());
       }
       if (scrollToBottom) {
         WidgetsBinding.instance.addPostFrameCallback((_) => jumpToBottom());
@@ -721,24 +696,20 @@ class _ConversationScreenState extends State<ConversationScreen>
     if (messages.isEmpty || requestInFlight) return;
     requestInFlight = true;
     try {
-      final firstId = Uri.encodeQueryComponent(
-        messages.first['_id'].toString(),
-      );
-      final response = await widget.api.request(
-        'GET',
-        '/api/conversations/${widget.conversation['_id']}/messages?beforeId=$firstId&limit=50',
+      final response = await messaging.messages(
+        widget.conversation['_id'].toString(),
+        beforeId: messages.first['_id'].toString(),
+        limit: 50,
       );
       if (!mounted) return;
-      final older = (response['messages'] as List? ?? [])
-          .map((item) => Map<String, dynamic>.from(item))
-          .toList();
+      final older = response.messages;
       setState(() {
         final known = messages.map((item) => item['_id'].toString()).toSet();
         messages = [
           ...older.where((item) => !known.contains(item['_id'].toString())),
           ...messages,
         ];
-        hasOlder = response['pagination']?['hasMore'] == true;
+        hasOlder = response.hasMore;
       });
     } catch (next) {
       if (mounted) setState(() => error = next.toString());
@@ -762,15 +733,13 @@ class _ConversationScreenState extends State<ConversationScreen>
     if (body.isEmpty || sending) return;
     setState(() => sending = true);
     try {
-      final response = await widget.api.request(
-        'POST',
-        '/api/conversations/${widget.conversation['_id']}/messages',
-        body: {'body': body},
+      final sent = await messaging.send(
+        widget.conversation['_id'].toString(),
+        body,
       );
       message.clear();
       if (mounted) {
         setState(() {
-          final sent = Map<String, dynamic>.from(response['message']);
           if (!messages.any(
             (item) => item['_id'].toString() == sent['_id'].toString(),
           )) {
@@ -789,20 +758,14 @@ class _ConversationScreenState extends State<ConversationScreen>
 
   Future<void> manageMembers() async {
     try {
-      final results = await Future.wait([
-        widget.api.request(
-          'GET',
-          '/api/conversations/${widget.conversation['_id']}/members',
-        ),
-        widget.api.request('GET', '/api/conversations/users'),
+      final conversationId = widget.conversation['_id'].toString();
+      final results = await Future.wait<List<Map<String, dynamic>>>([
+        messaging.members(conversationId),
+        messaging.users(),
       ]);
       if (!mounted) return;
-      var members = (results[0]['members'] as List? ?? [])
-          .map((item) => Map<String, dynamic>.from(item))
-          .toList();
-      final users = (results[1]['users'] as List? ?? [])
-          .map((item) => Map<String, dynamic>.from(item))
-          .toList();
+      var members = results[0];
+      final users = results[1];
       await showModalBottomSheet<void>(
         context: context,
         showDragHandle: true,
@@ -850,9 +813,9 @@ class _ConversationScreenState extends State<ConversationScreen>
                                   : IconButton(
                                       tooltip: context.tr('Remove member'),
                                       onPressed: () async {
-                                        await widget.api.request(
-                                          'DELETE',
-                                          '/api/conversations/${widget.conversation['_id']}/members/${member['id']}',
+                                        await messaging.removeMember(
+                                          conversationId,
+                                          member['id'].toString(),
                                         );
                                         setSheetState(
                                           () => members = members
@@ -890,10 +853,9 @@ class _ConversationScreenState extends State<ConversationScreen>
                                 ),
                                 title: Text(person['name']),
                                 onTap: () async {
-                                  await widget.api.request(
-                                    'POST',
-                                    '/api/conversations/${widget.conversation['_id']}/members',
-                                    body: {'userId': person['id']},
+                                  await messaging.addMember(
+                                    conversationId,
+                                    person['id'].toString(),
                                   );
                                   setSheetState(
                                     () => members = [

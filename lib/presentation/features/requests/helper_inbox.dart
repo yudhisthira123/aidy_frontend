@@ -8,6 +8,7 @@ class HelperInbox extends StatefulWidget {
 }
 
 class _HelperInboxState extends State<HelperInbox> {
+  late final RequestService requests = RequestService(widget.api);
   List items = [];
   bool loading = true;
   String? loadError;
@@ -35,15 +36,10 @@ class _HelperInboxState extends State<HelperInbox> {
 
   Future<void> load() async {
     try {
-      try {
-        await widget.api.request('POST', '/api/requests/helper/refresh');
-      } catch (_) {
-        // Older deployments may not expose catch-up matching yet; still load.
-      }
-      final r = await widget.api.request('GET', '/api/requests/helper/inbox');
+      final inbox = await requests.helperInbox();
       if (mounted) {
         setState(() {
-          items = r['requests'] ?? [];
+          items = inbox;
           loadError = null;
         });
       }
@@ -73,15 +69,11 @@ class _HelperInboxState extends State<HelperInbox> {
       return;
     }
     final position = await Geolocator.getCurrentPosition();
-    await widget.api.request(
-      'PUT',
-      '/api/users/me/location',
-      body: {
-        'latitude': position.latitude,
-        'longitude': position.longitude,
-        'accuracyMeters': position.accuracy,
-        'source': 'gps',
-      },
+    await requests.updateLocation(
+      latitude: position.latitude,
+      longitude: position.longitude,
+      accuracyMeters: position.accuracy,
+      source: 'gps',
     );
   }
 
@@ -92,17 +84,10 @@ class _HelperInboxState extends State<HelperInbox> {
       responseErrors.remove(id);
     });
     try {
-      await widget.api.request(
-        'POST',
-        '/api/requests/$id/responses',
-        body: {
-          'decision': decision,
-          if (decision == 'accept') 'etaMinutes': etaMinutes,
-          'additionalHelpers': 0,
-          'equipment': [],
-          'competencies': [],
-          if (decision == 'reject') 'reason': 'Unavailable',
-        },
+      await requests.respond(
+        requestId: id,
+        decision: decision,
+        etaMinutes: etaMinutes,
       );
       await load();
       if (mounted) {

@@ -9,7 +9,10 @@ for every small class.
 ```text
 lib/
   app/                    composition root, app lifecycle, theme and navigation
-  application/            use cases and application state (no platform code)
+  application/            typed use cases and endpoint orchestration
+    auth/                 authentication and session workflows
+    messages/             messaging REST contracts and pagination
+    requests/             request discovery, matching and coordination
   domain/                 entities and gateway contracts
   data/                   HTTP and persistence implementations
   infrastructure/         Firebase and device/platform adapters
@@ -36,8 +39,9 @@ lib/
 2. **Application** (`application`) coordinates use cases and application state
    through domain contracts. It contains no widgets, HTTP, Firebase, or storage
    implementation details.
-3. **Presentation** (`presentation/features`, `presentation/shared`) owns widgets and view state. Features
-   depend on `LokaleApi`, not on HTTP, secure storage, or Firebase details.
+3. **Presentation** (`presentation/features`, `presentation/shared`) owns
+   widgets and view state. Screens delegate reusable endpoint orchestration to
+   application services and never own response-envelope mapping.
 4. **Domain** (`domain`) owns request entities, gateway contracts, and
    validation/serialization
    invariants. It has no Flutter UI dependency.
