@@ -1,4 +1,4 @@
-import 'package:aidy_mobile/models/aidy_request.dart';
+import 'package:aidy_mobile/domain/entities/aidy_request.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

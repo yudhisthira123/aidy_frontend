@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:aidy_mobile/core/api_client.dart';
+import 'package:aidy_mobile/data/network/api_client.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';

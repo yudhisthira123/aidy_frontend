@@ -2,7 +2,8 @@ import 'dart:io';
 
 const excluded = {
   'lib/firebase_options.dart',
-  'lib/core/static_content_translations.dart',
+  'lib/domain/gateways/lokale_api.dart',
+  'lib/presentation/localization/static_content_translations.dart',
 };
 
 Future<String> git(List<String> arguments) async {

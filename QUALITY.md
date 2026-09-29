@@ -6,11 +6,12 @@ Recorded on 2026-09-29 after migrating the complete Lokale mobile client.
 | --- | --- |
 | Dart formatting | Pass |
 | Flutter analyzer | Pass, zero findings |
-| Unit and widget tests | 19 passed |
-| Overall executable-line coverage | 349 / 3,761 (9.28%) |
+| Unit, widget, and architecture tests | 29 passed |
+| Overall executable-line coverage | 374 / 3,786 (9.88%) |
 | Android debug compilation | Pass |
 
-The coverage number is an honest legacy baseline, not a target. Most uncovered
+The coverage number is an honest legacy baseline, not a target. New application
+use-case code is fully covered; most remaining uncovered
 code is widget orchestration and platform integration. The repository enforces
 80% coverage for subsequently changed executable lines so new work cannot add
 another large untested surface. Coverage should be expanded feature by feature,

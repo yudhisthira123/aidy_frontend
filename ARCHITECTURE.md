@@ -9,8 +9,12 @@ for every small class.
 ```text
 lib/
   app/                    composition root, app lifecycle, theme and navigation
-  core/                   contracts plus API, storage, localization and platform adapters
-  features/
+  application/            use cases and application state (no platform code)
+  domain/                 entities and gateway contracts
+  data/                   HTTP and persistence implementations
+  infrastructure/         Firebase and device/platform adapters
+  presentation/
+    features/
     admin/                administrator workflows
     auth/                 registration and sign-in
     capabilities/         matching-profile setup
@@ -20,8 +24,8 @@ lib/
     news/                 community content
     profile/              profile and capability editing
     requests/             creation, nearby inbox, tracking and details
-  models/                 stable domain entities and API serialization
-  shared/                 reusable presentation components
+    localization/         localized system and catalog presentation
+    shared/               reusable presentation components
   main.dart               bootstrap and library composition only
 ```
 
@@ -29,17 +33,27 @@ lib/
 
 1. **Application** (`app`) composes dependencies and owns app-wide lifecycle
    state. It may depend on every lower layer.
-2. **Presentation** (`features`, `shared`) owns widgets and view state. Features
+2. **Application** (`application`) coordinates use cases and application state
+   through domain contracts. It contains no widgets, HTTP, Firebase, or storage
+   implementation details.
+3. **Presentation** (`presentation/features`, `presentation/shared`) owns widgets and view state. Features
    depend on `LokaleApi`, not on HTTP, secure storage, or Firebase details.
-3. **Domain** (`models`) owns request entities and validation/serialization
+4. **Domain** (`domain`) owns request entities, gateway contracts, and
+   validation/serialization
    invariants. It has no Flutter UI dependency.
-4. **Infrastructure** (`core`) implements network, secure storage, Firebase,
-   localization, and device adapters. `ApiClient` implements the `LokaleApi`
-   application contract and is replaceable in tests.
+5. **Data** (`data`) implements domain gateways using HTTP and secure storage.
+   `ApiClient` implements `LokaleApi` and remains replaceable in tests.
+6. **Infrastructure** (`infrastructure`) contains Firebase and device adapters.
+   It receives presentation concerns such as translation as callbacks rather
+   than importing the presentation layer.
 
-Dependency direction is `application -> presentation -> contract/domain`, with
-infrastructure supplied by the composition root. A feature must not instantiate
-an HTTP client, secure store, Firebase client, or another feature's controller.
+Dependencies point inward: `presentation -> application/domain` and
+`data/infrastructure -> domain`. The app composition root wires the concrete
+implementations. A feature must not instantiate an HTTP client, secure store,
+Firebase client, or another feature's controller.
+
+These rules are executable. `test/architecture/dependency_rules_test.dart`
+fails when an import crosses a forbidden boundary.
 
 ## DRY and SOLID rules
 

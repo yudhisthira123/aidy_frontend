@@ -19,8 +19,12 @@ class AidyApp extends StatefulWidget {
 
 class _AidyAppState extends State<AidyApp> with WidgetsBindingObserver {
   final api = ApiClient();
+  late final AuthenticationService authentication = AuthenticationService(api);
   final navigatorKey = GlobalKey<NavigatorState>();
-  late final NotificationService notifications = NotificationService(api);
+  late final NotificationService notifications = NotificationService(
+    api,
+    translate: (key) => AppLocalizations(Locale(language)).t(key),
+  );
   Map<String, dynamic>? user;
   bool loading = true;
   bool darkMode = false;
@@ -58,10 +62,9 @@ class _AidyAppState extends State<AidyApp> with WidgetsBindingObserver {
       language = await api.readLocal('lokale_language') ?? 'en';
       api.language = language;
       await notifications.initialize();
-      await api.restore();
-      if (api.token != null) {
-        final r = await api.request('GET', '/api/auth/me');
-        user = Map<String, dynamic>.from(r['user']);
+      final restoredUser = await authentication.restore();
+      if (restoredUser != null) {
+        user = restoredUser;
         await configureNotifications();
       }
     } catch (_) {}
@@ -208,9 +211,8 @@ class _AidyAppState extends State<AidyApp> with WidgetsBindingObserver {
 
   Future<void> logout() async {
     try {
-      await api.request('POST', '/api/auth/logout');
+      await authentication.signOut();
     } catch (_) {}
-    await api.clearToken();
     setState(() => user = null);
   }
 
@@ -370,7 +372,7 @@ class _AidyAppState extends State<AidyApp> with WidgetsBindingObserver {
     home: loading
         ? const Splash()
         : user == null
-        ? AuthScreen(api: api, onDone: signedIn)
+        ? AuthScreen(authentication: authentication, onDone: signedIn)
         : ((user!['onboarding']?['status'] ?? 'incomplete') == 'incomplete'
               ? CapabilitiesScreen(
                   api: api,
