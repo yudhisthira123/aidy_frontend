@@ -9,6 +9,9 @@ for every small class.
 Every Dart file is an independent module with explicit imports. The codebase
 does not use `part` or `part of`; this is enforced by an architecture test.
 
+Admin translation editing, messaging conversations, request discovery cards,
+and helper-inbox cards live in focused modules rather than monolithic screens.
+
 ```text
 lib/
   app/                    composition root, app lifecycle, theme and navigation
@@ -92,6 +95,9 @@ fails when an import crosses a forbidden boundary.
 Every pull request runs formatting, `flutter analyze`, unit/widget tests with
 LCOV, an 80% changed-line coverage gate, and a debug Android build. SonarQube
 consumes the same LCOV report when its repository secrets are configured.
+
+Device-level journeys live under `integration_test/`. See `TESTING.md` for the
+required Android/iOS device command and isolation rules.
 
 Overall coverage is reported separately from changed-line coverage. The ported
 legacy UI currently has a low overall baseline, so new and changed executable
